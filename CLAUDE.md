@@ -524,8 +524,8 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 - [ ] Full tablet layout review at 1280×800px landscape
 - [ ] Touch target audit — all interactive elements minimum 48×48px
 - [ ] Contrast check — readable at arm's length
-- [ ] PWA manifest configured (name, icons, theme colour)
-- [ ] "Add to Home Screen" tested on Samsung Galaxy Tab
+- [x] PWA manifest configured (name, icons, theme colour)
+- [x] "Add to Home Screen" tested on Samsung Galaxy Tab
 
 ---
 
@@ -584,4 +584,9 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 - Secondary card buttons use `e.stopPropagation()` to prevent triggering the inactive panel's expand-on-click behaviour
 - Design and polish notes:
   - Secondary cards can just be simple buttons to expand the card.
-  - 
+  - VP/CP tracker page, we can have a 90/10 split on active player
+
+## Testing on tablet and publishing notes:
+- Had some issues testing on tablet as a PWA, in the end opted to host on github pages (I might move to cloudflare at some point) to be able to have the app work as a PWA page thing
+- Also had some issues initialising a github repo for the project, but solved them and eventually hosted the app on a github page: https://jollly7.github.io/wh40k-tracker-app-test/
+- 

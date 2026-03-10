@@ -11,7 +11,7 @@ function getCellIcon(state, isAttacker) {
   return <Circle size={16} className="text-text-muted" />;
 }
 
-export function PhasesTab({ attackerNum, defenderNum, firstPlayerNum, secondPlayerNum }) {
+export function PhasesTab({ attackerNum, firstPlayerNum, secondPlayerNum }) {
   const currentPhase = useGameStore((s) => s.currentPhase);
   const round        = useGameStore((s) => s.round);
   const activePlayer = useGameStore((s) => s.activePlayer);

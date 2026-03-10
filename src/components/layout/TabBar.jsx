@@ -3,7 +3,7 @@ import { BarChart2, List, Users } from 'lucide-react';
 const TABS = [
   { id: 'tracker',  label: 'Tracker',  Icon: BarChart2 },
   { id: 'phases',   label: 'Phases',   Icon: List },
-  { id: 'factions', label: 'Factions', Icon: Users },
+  { id: 'factions', label: 'Faction Reminders', Icon: Users },
 ];
 
 export function TabBar({ activeTab, setActiveTab }) {

@@ -20,7 +20,7 @@ export default defineConfig({
         description: 'Track CP, VP, objectives, and phases for 10th Edition games',
         theme_color: '#111827',
         background_color: '#111827',
-        display: 'standalone',
+        display: 'fullscreen',
         orientation: 'landscape',
         icons: [
           {

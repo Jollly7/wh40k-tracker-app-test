@@ -50,14 +50,6 @@ function FactionColumn({ playerNum, isAttacker, isLeft }) {
           </div>
         ))}
 
-        {/* Pre-battle notes */}
-        <div className="border-t border-border-subtle pt-4">
-          <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">Pre-Battle Notes</h3>
-          <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap">
-            {player.preBattleNotes || 'No pre-battle notes recorded.'}
-          </p>
-        </div>
-
         {/* Add note stub */}
         <button className="flex items-center gap-2 px-3 py-3 rounded-panel border border-dashed border-border-subtle
           text-sm text-text-muted hover:text-text-secondary hover:border-border-strong transition-colors min-h-[48px]">
@@ -69,8 +61,7 @@ function FactionColumn({ playerNum, isAttacker, isLeft }) {
   );
 }
 
-export function FactionsTab({ firstPlayerNum, attackerNum }) {
-  const secondPlayerNum = firstPlayerNum === 1 ? 2 : 1;
+export function FactionsTab({ firstPlayerNum, secondPlayerNum, attackerNum }) {
   return (
     <div className="h-full flex overflow-hidden">
       <FactionColumn playerNum={firstPlayerNum} isAttacker={firstPlayerNum === attackerNum} isLeft />

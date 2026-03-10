@@ -3,14 +3,15 @@ import { useGameStore } from '../../store/gameStore';
 import { PRIMARY_MISSION_IMAGES } from '../../data/missionImages';
 
 const OWNER_STYLES = {
-  null: 'bg-surface-inset text-text-muted hover:bg-border-subtle',
-  1:    'bg-accent text-accent-foreground hover:bg-accent-hover',
-  2:    'bg-danger text-text-inverse hover:bg-danger-hover',
+  null:     'bg-surface-inset text-text-muted hover:bg-border-subtle',
+  attacker: 'bg-danger text-text-inverse hover:bg-danger-hover',
+  defender: 'bg-success text-text-inverse hover:bg-success-hover',
 };
 
-function ObjectiveCircle({ obj }) {
+function ObjectiveCircle({ obj, attackerNum }) {
   const cycleObjective = useGameStore((s) => s.cycleObjective);
-  const style = OWNER_STYLES[obj.owner] ?? OWNER_STYLES[null];
+  const role = obj.owner === null ? null : obj.owner === attackerNum ? 'attacker' : 'defender';
+  const style = OWNER_STYLES[role] ?? OWNER_STYLES[null];
 
   return (
     <button
@@ -25,11 +26,11 @@ function ObjectiveCircle({ obj }) {
 export function ObjectivesSidebar() {
   const objectives = useGameStore((s) => s.objectives);
   const primaryMission = useGameStore((s) => s.primaryMission);
-  const p1     = useGameStore((s) => s.players[1]);
-  const p2     = useGameStore((s) => s.players[2]);
-  const p1Role = useGameStore((s) => s.players[1].role);
-  const p1Color = p1Role === 'attacker' ? 'text-danger' : 'text-success';
-  const p2Color = p1Role === 'attacker' ? 'text-success' : 'text-danger';
+  const p1      = useGameStore((s) => s.players[1]);
+  const p2      = useGameStore((s) => s.players[2]);
+  const attackerNum = p1.role === 'attacker' ? 1 : 2;
+  const p1Color = p1.role === 'attacker' ? 'text-danger' : 'text-success';
+  const p2Color = p2.role === 'attacker' ? 'text-danger' : 'text-success';
 
   const [imgFailed, setImgFailed] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -111,15 +112,15 @@ export function ObjectivesSidebar() {
         */}
         <div className="flex flex-col gap-2">
           <div className="flex justify-between px-1">
-            <ObjectiveCircle obj={objectives[0]} />
-            <ObjectiveCircle obj={objectives[1]} />
+            <ObjectiveCircle obj={objectives[0]} attackerNum={attackerNum} />
+            <ObjectiveCircle obj={objectives[1]} attackerNum={attackerNum} />
           </div>
           <div className="flex justify-center">
-            <ObjectiveCircle obj={objectives[2]} />
+            <ObjectiveCircle obj={objectives[2]} attackerNum={attackerNum} />
           </div>
           <div className="flex justify-between px-1">
-            <ObjectiveCircle obj={objectives[3]} />
-            <ObjectiveCircle obj={objectives[4]} />
+            <ObjectiveCircle obj={objectives[3]} attackerNum={attackerNum} />
+            <ObjectiveCircle obj={objectives[4]} attackerNum={attackerNum} />
           </div>
         </div>
       </div>

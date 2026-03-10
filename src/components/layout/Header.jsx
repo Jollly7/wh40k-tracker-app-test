@@ -29,6 +29,10 @@ export function Header({ onReset }) {
 
   const phaseName = PHASES[currentPhase]?.name ?? '—';
 
+  // Role-based colours: attacker = danger (red), defender = success (green)
+  const p1Color = p1.role === 'attacker' ? 'text-danger' : 'text-success';
+  const p2Color = p2.role === 'attacker' ? 'text-danger' : 'text-success';
+
   // Tick the active player's timer every second; freeze when game is over or paused
   useEffect(() => {
     if (gameOver || timerPaused) return;
@@ -85,7 +89,7 @@ export function Header({ onReset }) {
       <div className="flex-1 flex items-center justify-center gap-1.5 text-xs whitespace-nowrap min-w-0">
 
         {/* P1 Timer */}
-        <span className={`font-display tabular-nums text-sm ${activePlayer === 1 && !gameOver && !timerPaused ? 'text-accent' : 'text-text-muted'}`}>
+        <span className={`font-display tabular-nums text-sm ${activePlayer === 1 && !gameOver && !timerPaused ? p1Color : 'text-text-muted'}`}>
           {formatTime(timers.p1)}
         </span>
 
@@ -98,14 +102,14 @@ export function Header({ onReset }) {
         <span className="text-text-secondary">
           <span className="text-text-primary font-medium">{p1.vp.total}</span>vp
         </span>
-        <span className={`font-display font-semibold text-sm ${activePlayer === 1 ? 'text-accent' : 'text-text-muted'}`}>
+        <span className={`font-display font-semibold text-sm ${activePlayer === 1 ? p1Color : 'text-text-muted'}`}>
           {p1.name}
         </span>
 
         <span className="text-text-muted px-0.5">vs</span>
 
         {/* P2 stats */}
-        <span className={`font-display font-semibold text-sm ${activePlayer === 2 ? 'text-danger' : 'text-text-muted'}`}>
+        <span className={`font-display font-semibold text-sm ${activePlayer === 2 ? p2Color : 'text-text-muted'}`}>
           {p2.name}
         </span>
         <span className="text-text-secondary">
@@ -118,7 +122,7 @@ export function Header({ onReset }) {
         <span className="text-border-strong">·</span>
 
         {/* P2 Timer */}
-        <span className={`font-display tabular-nums text-sm ${activePlayer === 2 && !gameOver && !timerPaused ? 'text-danger' : 'text-text-muted'}`}>
+        <span className={`font-display tabular-nums text-sm ${activePlayer === 2 && !gameOver && !timerPaused ? p2Color : 'text-text-muted'}`}>
           {formatTime(timers.p2)}
         </span>
 

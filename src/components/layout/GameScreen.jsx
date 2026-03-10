@@ -13,9 +13,7 @@ export function GameScreen() {
   const p1Role      = useGameStore((s) => s.players[1].role);
   const firstPlayer = useGameStore((s) => s.firstPlayer);
 
-  const attackerNum   = p1Role === 'attacker' ? 1 : 2;
-  const defenderNum   = attackerNum === 1 ? 2 : 1;
-  const firstPlayerNum  = firstPlayer;
+  const attackerNum     = p1Role === 'attacker' ? 1 : 2;
   const secondPlayerNum = firstPlayer === 1 ? 2 : 1;
 
   const [activeTab, setActiveTab] = useState('tracker');
@@ -41,18 +39,20 @@ export function GameScreen() {
             {activeTab === 'tracker' && (
               <TrackerTab
                 attackerNum={attackerNum}
-                firstPlayerNum={firstPlayerNum}
+                firstPlayerNum={firstPlayer}
                 secondPlayerNum={secondPlayerNum} />
             )}
             {activeTab === 'phases' && (
               <PhasesTab
                 attackerNum={attackerNum}
-                defenderNum={defenderNum}
-                firstPlayerNum={firstPlayerNum}
+                firstPlayerNum={firstPlayer}
                 secondPlayerNum={secondPlayerNum} />
             )}
             {activeTab === 'factions' && (
-              <FactionsTab attackerNum={attackerNum} firstPlayerNum={firstPlayerNum} />
+              <FactionsTab
+                attackerNum={attackerNum}
+                firstPlayerNum={firstPlayer}
+                secondPlayerNum={secondPlayerNum} />
             )}
           </div>
 

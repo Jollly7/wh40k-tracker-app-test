@@ -22,7 +22,7 @@ const VP_COLUMNS = [
   { key: 'sec2',    label: 'Sec 2',       longLabel: 'Secondary 2' },
 ];
 
-function VPCell({ playerNum, round, column, value, isCurrentRound, showControls, compact }) {
+function VPCell({ playerNum, round, column, value, isCurrentRound, showControls }) {
   const adjustVP = useGameStore((s) => s.adjustVP);
 
   if (!isCurrentRound) {
@@ -37,26 +37,23 @@ function VPCell({ playerNum, round, column, value, isCurrentRound, showControls,
     return <span className="font-display font-medium text-text-primary tabular-nums">{value}</span>;
   }
 
-  const btnSize = compact ? 'w-7 h-7' : 'w-8 h-8';
-  const valWidth = compact ? 'w-5' : 'w-6';
-
   return (
     <div className="flex items-center justify-center gap-0.5">
       <button
         onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustVP(playerNum, round, column, -1); }}
         disabled={value === 0}
-        className={`${btnSize} rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
+        className="w-8 h-8 rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
           disabled:opacity-25 disabled:cursor-not-allowed text-text-primary font-bold flex items-center justify-center
-          transition-colors shrink-0 text-sm leading-none`}
+          transition-colors shrink-0 text-sm leading-none"
         aria-label={`Decrease ${column} VP round ${round}`}
       >
         −
       </button>
-      <span className={`${valWidth} text-center tabular-nums text-text-primary font-display font-medium text-sm`}>{value}</span>
+      <span className="w-6 text-center tabular-nums text-text-primary font-display font-medium text-sm">{value}</span>
       <button
         onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustVP(playerNum, round, column, +1); }}
-        className={`${btnSize} rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
-          text-text-primary font-bold flex items-center justify-center transition-colors shrink-0 text-sm leading-none`}
+        className="w-8 h-8 rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
+          text-text-primary font-bold flex items-center justify-center transition-colors shrink-0 text-sm leading-none"
         aria-label={`Increase ${column} VP round ${round}`}
       >
         +
@@ -65,21 +62,20 @@ function VPCell({ playerNum, round, column, value, isCurrentRound, showControls,
   );
 }
 
-function VPTable({ playerNum, showControls, currentRound, compact }) {
+function VPTable({ playerNum, showControls, currentRound }) {
   const byRound = useGameStore((s) => s.players[playerNum].vp.byRound);
-  const colPad  = compact ? 'px-1' : 'px-3';
 
   return (
-    <table className={`w-full border-collapse bg-surface-raised rounded-panel shadow-panel ${compact ? 'text-xs' : 'text-sm'}`}>
+    <table className="w-full border-collapse bg-surface-raised rounded-panel shadow-panel text-sm">
       <thead>
         <tr className="bg-surface-inset border-b border-border-subtle">
           <th className="text-left pb-1 pt-1 pl-2 font-normal text-text-muted whitespace-nowrap pr-2 w-px uppercase tracking-wider text-xs" />
           {VP_COLUMNS.map((c) => (
-            <th key={c.key} className={`pb-1 pt-1 font-normal text-text-secondary text-center text-xs uppercase tracking-wider ${colPad}`}>
+            <th key={c.key} className="px-3 pb-1 pt-1 font-normal text-text-secondary text-center text-xs uppercase tracking-wider">
               {showControls ? c.longLabel : c.label}
             </th>
           ))}
-          <th className={`pb-1 pt-1 font-normal text-center ${colPad}`}>
+          <th className="px-3 pb-1 pt-1 font-normal text-center">
             <span className="flex items-center justify-center gap-0.5 text-text-muted text-xs uppercase tracking-wider">
               <Lock size={9} />{showControls ? 'Challenger' : 'Chall'}
             </span>
@@ -103,7 +99,7 @@ function VPTable({ playerNum, showControls, currentRound, compact }) {
                 Round {r}
               </td>
               {VP_COLUMNS.map((c) => (
-                <td key={c.key} className={`py-1 text-center ${colPad}`}>
+                <td key={c.key} className="py-1 text-center px-3">
                   {isFutureRound ? (
                     <span className="text-text-muted">—</span>
                   ) : (
@@ -114,12 +110,11 @@ function VPTable({ playerNum, showControls, currentRound, compact }) {
                       value={rowData[c.key]}
                       isCurrentRound={isCurrentRound}
                       showControls={showControls}
-                      compact={compact}
                     />
                   )}
                 </td>
               ))}
-              <td className={`text-center bg-surface-inset ${colPad} ${isCurrentRound ? 'py-1.5' : 'py-1'}`}>
+              <td className={`text-center bg-surface-inset px-3 ${isCurrentRound ? 'py-1.5' : 'py-1'}`}>
                 <span className="text-text-muted">—</span>
               </td>
             </tr>
@@ -131,12 +126,12 @@ function VPTable({ playerNum, showControls, currentRound, compact }) {
           {VP_COLUMNS.map((c) => {
             const total = byRound.reduce((sum, r) => sum + (r[c.key] || 0), 0);
             return (
-              <td key={c.key} className={`py-1.5 text-center font-display font-bold text-accent ${colPad}`}>
+              <td key={c.key} className="py-1.5 text-center font-display font-bold text-accent px-3">
                 {total}
               </td>
             );
           })}
-          <td className={`py-1.5 text-center font-display font-bold text-text-muted bg-surface-inset ${colPad}`}>—</td>
+          <td className="py-1.5 text-center font-display font-bold text-text-muted bg-surface-inset px-3">—</td>
         </tr>
       </tbody>
     </table>
@@ -218,7 +213,7 @@ function DrawModal({ deck, onSelect, onCancel }) {
 }
 
 // A single secondary card slot — empty shows Draw button, filled shows image + Discard
-function SecondaryCardSlot({ cardName, onDraw, onDiscard, compact }) {
+function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
   const [imgError, setImgError] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [cardRect, setCardRect] = useState(null);
@@ -312,7 +307,7 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard, compact }) {
   );
 }
 
-function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExpand, onCollapse }) {
+function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExpand, onCollapse, onActiveClick }) {
   const player      = useGameStore((s) => s.players[playerNum]);
   const round       = useGameStore((s) => s.round);
   const adjustCP    = useGameStore((s) => s.adjustCP);
@@ -322,7 +317,6 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExp
   const accent      = ROLE_ACCENT[isAttacker ? 'attacker' : 'defender'];
   const showControls        = isActive || isExpanded;
   const isCollapsedInactive = !isActive && !isExpanded;
-  const compact             = isCollapsedInactive;
 
   const [drawModal, setDrawModal] = useState(null); // null | { slot: 0|1 }
 
@@ -340,17 +334,17 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExp
         className={`relative h-full w-full flex flex-col overflow-hidden select-none bg-surface-panel
           ${isActive ? `${accent.border} ${accent.bg}` : 'border-l border-border-subtle'}
           ${isCollapsedInactive ? 'cursor-pointer' : ''}`}
-        onClick={isCollapsedInactive ? onExpand : undefined}
+        onClick={isCollapsedInactive ? onExpand : (isActive && onActiveClick ? onActiveClick : undefined)}
       >
         {/* Collapse button — expanded inactive only */}
         {isExpanded && (
           <button
             onClick={(e) => { e.stopPropagation(); onCollapse(); }}
-            className="absolute top-2 right-2 z-10 w-10 h-10 flex items-center justify-center
+            className="absolute top-2 right-2 z-10 w-12 h-12 flex items-center justify-center
               rounded-panel text-text-muted hover:text-text-primary hover:bg-surface-inset transition-colors"
             title="Collapse"
           >
-            <X size={14} />
+            <X size={18} />
           </button>
         )}
 
@@ -371,8 +365,8 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExp
         <div className="flex-1 overflow-y-auto min-h-0 p-3 flex flex-col gap-4">
 
           {/* CP section */}
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-text-muted uppercase tracking-wide shrink-0">CP</span>
+          <div className="flex items-baseline gap-3">
+            <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider shrink-0">CP</span>
             <span className="font-display text-4xl font-bold text-text-primary tabular-nums w-10">{player.cp}</span>
             {showControls && (
               <div className="flex gap-2 ml-1">
@@ -402,7 +396,7 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExp
 
           {/* VP total */}
           <div className="flex items-baseline gap-2">
-            <span className="text-xs text-text-muted uppercase tracking-wide">VP</span>
+            <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">VP</span>
             <span className="font-display text-4xl font-bold text-text-primary tabular-nums">{player.vp.total}</span>
             <span className="text-xs text-text-muted tabular-nums">
               {player.vp.primary}p / {player.vp.secondary}s
@@ -412,7 +406,7 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExp
           {/* VP table */}
           {isCollapsedInactive
             ? <MiniVPTable playerNum={playerNum} currentRound={round} />
-            : <VPTable playerNum={playerNum} showControls={showControls} currentRound={round} compact={compact} />}
+            : <VPTable playerNum={playerNum} showControls={showControls} currentRound={round} />}
 
           {/* Secondary Cards — hidden when collapsed to 10% strip */}
           {!isCollapsedInactive && <div className="flex flex-col gap-2">
@@ -425,7 +419,6 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExp
                 <SecondaryCardSlot
                   key={slot}
                   cardName={hand[slot]}
-                  compact={compact}
                   onDraw={() => setDrawModal({ slot })}
                   onDiscard={() => discardCard(playerNum, slot)}
                 />
@@ -465,6 +458,7 @@ export function TrackerTab({ attackerNum, firstPlayerNum, secondPlayerNum }) {
           isExpanded={leftIsExpanded}
           onExpand={() => setExpandedInactive(true)}
           onCollapse={() => setExpandedInactive(false)}
+          onActiveClick={expandedInactive ? () => setExpandedInactive(false) : undefined}
         />
       </div>
 
@@ -477,6 +471,7 @@ export function TrackerTab({ attackerNum, firstPlayerNum, secondPlayerNum }) {
           isExpanded={rightIsExpanded}
           onExpand={() => setExpandedInactive(true)}
           onCollapse={() => setExpandedInactive(false)}
+          onActiveClick={expandedInactive ? () => setExpandedInactive(false) : undefined}
         />
       </div>
     </div>

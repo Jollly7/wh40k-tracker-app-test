@@ -17,7 +17,6 @@ const initialPlayerState = (name) => ({
   faction: null,
   detachment: null,
   role: null,           // 'attacker' | 'defender' | null
-  preBattleNotes: '',
   cp: 0,
   vp: {
     total: 0,
@@ -134,9 +133,6 @@ export const useGameStore = create(
   setPlayerRole: (player, role) =>
     set((s) => ({ players: { ...s.players, [player]: { ...s.players[player], role } } })),
 
-  setPreBattleNotes: (player, notes) =>
-    set((s) => ({ players: { ...s.players, [player]: { ...s.players[player], preBattleNotes: notes } } })),
-
   resetGame: () => set(initialState),
 
   // --- Command Points ---
@@ -228,11 +224,7 @@ export const useGameStore = create(
     }
   },
 
-  setPhase: (index) => { saveSnapshot(); set({ currentPhase: index }); },
-
   // --- Round / Player ---
-  setRound: (round) => { saveSnapshot(); set({ round: Math.max(1, Math.min(5, round)) }); },
-
   setActivePlayer: (player) => { saveSnapshot(); set({ activePlayer: player }); },
 
   // --- Per-player timers (driven by Header useEffect, not the store) ---
