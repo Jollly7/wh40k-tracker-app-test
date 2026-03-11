@@ -14,7 +14,7 @@ export function PickerModal({ title, items, onSelect, onClose, selectedLabel, ca
           <h2 className="font-display text-lg font-semibold text-text-primary">{title}</h2>
           <button
             onClick={onClose}
-            className="text-chrome hover:text-chrome-hover text-2xl leading-none w-10 h-10 flex items-center justify-center rounded-panel transition-colors"
+            className="text-chrome hover:text-chrome-hover text-2xl leading-none w-12 h-12 flex items-center justify-center rounded-panel transition-colors"
             aria-label="Close"
           >
             ×

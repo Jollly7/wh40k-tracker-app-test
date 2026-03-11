@@ -42,7 +42,7 @@ function VPCell({ playerNum, round, column, value, isCurrentRound, showControls 
       <button
         onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustVP(playerNum, round, column, -1); }}
         disabled={value === 0}
-        className="w-8 h-8 rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
+        className="w-10 h-10 rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
           disabled:opacity-25 disabled:cursor-not-allowed text-text-primary font-bold flex items-center justify-center
           transition-colors shrink-0 text-sm leading-none"
         aria-label={`Decrease ${column} VP round ${round}`}
@@ -52,7 +52,7 @@ function VPCell({ playerNum, round, column, value, isCurrentRound, showControls 
       <span className="w-6 text-center tabular-nums text-text-primary font-display font-medium text-sm">{value}</span>
       <button
         onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustVP(playerNum, round, column, +1); }}
-        className="w-8 h-8 rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
+        className="w-10 h-10 rounded-chip bg-surface-inset border border-border-subtle hover:border-border-strong
           text-text-primary font-bold flex items-center justify-center transition-colors shrink-0 text-sm leading-none"
         aria-label={`Increase ${column} VP round ${round}`}
       >
@@ -172,12 +172,46 @@ function MiniVPTable({ playerNum, currentRound }) {
   );
 }
 
+// Individual card in the draw modal grid
+function DrawModalCard({ cardName, onSelect }) {
+  const [imgError, setImgError] = useState(false);
+  const imgSrc = SECONDARY_MISSION_IMAGES[cardName];
+  const hasImage = imgSrc && !imgError;
+
+  return (
+    <button
+      onClick={() => onSelect(cardName)}
+      className="flex flex-col items-center gap-1.5 p-1.5 rounded-panel border border-border-subtle
+        bg-surface-panel hover:border-border-strong hover:bg-surface-inset transition-colors group"
+    >
+      {hasImage ? (
+        <img
+          src={imgSrc}
+          alt={cardName}
+          onError={() => setImgError(true)}
+          className="w-32 aspect-[7/10] object-cover rounded-chip shrink-0
+            group-hover:opacity-90 transition-opacity"
+        />
+      ) : (
+        <div className="w-32 aspect-[7/10] flex items-center justify-center rounded-chip
+          bg-surface-inset text-xs text-text-muted text-center p-2 leading-tight shrink-0">
+          {cardName}
+        </div>
+      )}
+      <span className="text-xs text-text-secondary text-center leading-tight px-0.5 w-full line-clamp-2">
+        {cardName}
+      </span>
+    </button>
+  );
+}
+
 // Draw modal — no backdrop-click-to-close per spec
 function DrawModal({ deck, onSelect, onCancel }) {
   const sorted = [...deck].sort();
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-surface-raised border border-border-subtle rounded-panel shadow-raised w-80 max-h-[70vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3">
+      <div className="bg-surface-raised border border-border-subtle rounded-panel shadow-raised
+        w-full h-full flex flex-col">
         <div className="flex items-center justify-between px-4 py-2 border-b border-border-subtle shrink-0">
           <span className="text-sm font-semibold text-text-primary">Draw Secondary Card</span>
           <button
@@ -192,20 +226,13 @@ function DrawModal({ deck, onSelect, onCancel }) {
         {sorted.length === 0 ? (
           <p className="text-xs text-text-muted p-4 text-center">Deck is empty.</p>
         ) : (
-          <ul className="overflow-y-auto flex-1">
-            {sorted.map((card) => (
-              <li key={card}>
-                <button
-                  onClick={() => onSelect(card)}
-                  className="w-full text-left px-4 h-12 text-sm text-text-primary hover:bg-surface-inset
-                    transition-colors border-b border-border-subtle last:border-0
-                    flex items-center"
-                >
-                  {card}
-                </button>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-y-auto flex-1 p-3">
+            <div className="grid grid-cols-9 gap-2">
+              {sorted.map((card) => (
+                <DrawModalCard key={card} cardName={card} onSelect={onSelect} />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -230,10 +257,10 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
 
   if (!cardName) {
     return (
-      <div className="w-fit rounded-panel border border-dashed border-border-subtle p-1.5">
+      <div className="w-[196px] flex flex-col rounded-panel border border-dashed border-border-subtle p-1.5">
         <button
           onClick={(e) => { e.stopPropagation(); onDraw(); }}
-          className="w-40 min-h-[48px] flex items-center justify-center text-xs text-text-muted
+          className="flex-1 w-full min-h-[48px] flex items-center justify-center text-xs text-text-muted
             hover:text-text-primary hover:bg-surface-inset transition-colors rounded-panel"
         >
           Draw
@@ -244,7 +271,7 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
 
   return (
     <>
-      <div className="w-fit flex flex-col items-center gap-1 rounded-panel border border-border-subtle
+      <div className="w-[196px] flex flex-col rounded-panel border border-border-subtle
         bg-surface-panel p-1.5">
         {hasImage ? (
           <img
@@ -253,22 +280,19 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
             alt={cardName}
             onError={() => setImgError(true)}
             onClick={openLightbox}
-            className="w-40 aspect-[7/10] object-cover rounded-chip shrink-0 cursor-pointer
+            className="w-full h-14 object-cover object-top rounded-chip cursor-pointer shrink-0
               hover:opacity-90 active:opacity-75 transition-opacity"
           />
         ) : (
-          <div className="w-40 aspect-[7/10] flex items-center justify-center rounded-chip bg-surface-inset
-            text-xs text-text-muted text-center p-1 leading-tight shrink-0">
+          <div className="w-full h-7 flex items-center justify-center rounded-chip bg-surface-inset shrink-0
+            text-xs text-text-muted text-center p-1 leading-tight overflow-hidden">
             {cardName}
           </div>
         )}
-        <span className="text-xs text-text-secondary text-center leading-tight px-0.5 truncate w-full">
-          {cardName}
-        </span>
         <button
           onClick={(e) => { e.stopPropagation(); onDiscard(); }}
           className="w-full min-h-[48px] rounded-panel bg-surface-inset border border-border-subtle
-            hover:border-border-strong text-xs text-text-muted hover:text-text-primary transition-colors mt-auto"
+            hover:border-border-strong text-xs text-text-muted hover:text-text-primary transition-colors mt-2 shrink-0"
         >
           Discard
         </button>
@@ -307,7 +331,7 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
   );
 }
 
-function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExpand, onCollapse, onActiveClick }) {
+function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, isShrunk, onExpand, onCollapse, onActiveClick }) {
   const player      = useGameStore((s) => s.players[playerNum]);
   const round       = useGameStore((s) => s.round);
   const adjustCP    = useGameStore((s) => s.adjustCP);
@@ -364,67 +388,83 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, onExp
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto min-h-0 p-3 flex flex-col gap-4">
 
-          {/* CP section */}
-          <div className="flex items-baseline gap-3">
-            <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider shrink-0">CP</span>
-            <span className="font-display text-4xl font-bold text-text-primary tabular-nums w-10">{player.cp}</span>
-            {showControls && (
-              <div className="flex gap-2 ml-1">
-                <button
-                  onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustCP(playerNum, -1); }}
-                  disabled={player.cp === 0}
-                  className="w-12 h-12 rounded-panel bg-surface-inset border border-border-subtle
-                    hover:bg-surface-panel hover:border-border-strong disabled:opacity-25
-                    disabled:cursor-not-allowed text-xl font-bold text-text-primary flex items-center
-                    justify-center transition-colors shrink-0"
-                  aria-label="Spend CP"
-                >
-                  −
-                </button>
-                <button
-                  onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustCP(playerNum, +1); }}
-                  className="w-12 h-12 rounded-panel bg-surface-inset border border-border-subtle
-                    hover:bg-surface-panel hover:border-border-strong text-xl font-bold
-                    text-text-primary flex items-center justify-center transition-colors shrink-0"
-                  aria-label="Gain CP"
-                >
-                  +
-                </button>
+          {(isCollapsedInactive || isShrunk) ? (
+            <MiniVPTable playerNum={playerNum} currentRound={round} />
+          ) : (
+            <>
+              {/* Upper row: CP + VP totals (left) | Secondary cards (right) */}
+              <div className="flex gap-3 items-start">
+                {/* Left column: CP + VP totals */}
+                <div className="flex flex-col gap-4 flex-1 min-w-0">
+                  {/* CP section */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-end gap-2">
+                      <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider shrink-0">CP</span>
+                      <span className="font-display text-4xl font-bold text-text-primary tabular-nums leading-none w-10">{player.cp}</span>
+                    </div>
+                    {showControls && (
+                      <div className="flex gap-2 ml-1">
+                        <button
+                          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustCP(playerNum, -1); }}
+                          disabled={player.cp === 0}
+                          className="w-12 h-12 rounded-panel bg-surface-inset border border-border-subtle
+                            hover:bg-surface-panel hover:border-border-strong disabled:opacity-25
+                            disabled:cursor-not-allowed text-xl font-bold text-text-primary flex items-center
+                            justify-center transition-colors shrink-0"
+                          aria-label="Spend CP"
+                        >
+                          −
+                        </button>
+                        <button
+                          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustCP(playerNum, +1); }}
+                          className="w-12 h-12 rounded-panel bg-surface-inset border border-border-subtle
+                            hover:bg-surface-panel hover:border-border-strong text-xl font-bold
+                            text-text-primary flex items-center justify-center transition-colors shrink-0"
+                          aria-label="Gain CP"
+                        >
+                          +
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* VP total */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-end gap-2">
+                      <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">VP</span>
+                      <span className="font-display text-4xl font-bold text-text-primary tabular-nums leading-none">{player.vp.total}</span>
+                    </div>
+                    <div className="flex flex-col items-start text-xs text-text-muted tabular-nums leading-tight">
+                      <span>{player.vp.primary} Pri</span>
+                      <div className="border-t border-border-subtle w-full my-0.5" />
+                      <span>{player.vp.secondary} Sec</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right column: secondary cards */}
+                <div className="flex flex-col gap-2 shrink-0">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-text-muted uppercase tracking-wide">Secondary</span>
+                    <span className="text-xs text-text-muted ml-2">{player.secondaryDeck.length} left</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {[0, 1].map((slot) => (
+                      <SecondaryCardSlot
+                        key={slot}
+                        cardName={hand[slot]}
+                        onDraw={() => setDrawModal({ slot })}
+                        onDiscard={() => discardCard(playerNum, slot)}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* VP total */}
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold text-text-secondary uppercase tracking-wider">VP</span>
-            <span className="font-display text-4xl font-bold text-text-primary tabular-nums">{player.vp.total}</span>
-            <span className="text-xs text-text-muted tabular-nums">
-              {player.vp.primary}p / {player.vp.secondary}s
-            </span>
-          </div>
-
-          {/* VP table */}
-          {isCollapsedInactive
-            ? <MiniVPTable playerNum={playerNum} currentRound={round} />
-            : <VPTable playerNum={playerNum} showControls={showControls} currentRound={round} />}
-
-          {/* Secondary Cards — hidden when collapsed to 10% strip */}
-          {!isCollapsedInactive && <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between shrink-0">
-              <span className="text-xs text-text-muted uppercase tracking-wide">Secondary</span>
-              <span className="text-xs text-text-muted">{player.secondaryDeck.length} left</span>
-            </div>
-            <div className="flex gap-2">
-              {[0, 1].map((slot) => (
-                <SecondaryCardSlot
-                  key={slot}
-                  cardName={hand[slot]}
-                  onDraw={() => setDrawModal({ slot })}
-                  onDiscard={() => discardCard(playerNum, slot)}
-                />
-              ))}
-            </div>
-          </div>}
+              {/* VP table — full width below */}
+              <VPTable playerNum={playerNum} showControls={showControls} currentRound={round} />
+            </>
+          )}
 
         </div>
       </div>
@@ -443,9 +483,9 @@ export function TrackerTab({ attackerNum, firstPlayerNum, secondPlayerNum }) {
   const leftIsExpanded  = expandedInactive && !leftIsActive;
   const rightIsExpanded = expandedInactive && leftIsActive;
 
-  // Active = 90%, expanded inactive = 60%, collapsed inactive = 10%
-  const leftFlex  = leftIsActive   ? 'flex-[9]' : leftIsExpanded  ? 'flex-[6]' : 'flex-[1]';
-  const rightFlex = !leftIsActive  ? 'flex-[9]' : rightIsExpanded ? 'flex-[6]' : 'flex-[1]';
+  // Default: active = 90%, inactive = 10%. Expanded: inactive = 90%, active = 10%.
+  const leftFlex  = leftIsExpanded  ? 'flex-[9]' : leftIsActive && !expandedInactive  ? 'flex-[9]' : 'flex-[1]';
+  const rightFlex = rightIsExpanded ? 'flex-[9]' : !leftIsActive && !expandedInactive ? 'flex-[9]' : 'flex-[1]';
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -456,6 +496,7 @@ export function TrackerTab({ attackerNum, firstPlayerNum, secondPlayerNum }) {
           isAttacker={firstPlayerNum === attackerNum}
           isActive={leftIsActive}
           isExpanded={leftIsExpanded}
+          isShrunk={leftIsActive && expandedInactive}
           onExpand={() => setExpandedInactive(true)}
           onCollapse={() => setExpandedInactive(false)}
           onActiveClick={expandedInactive ? () => setExpandedInactive(false) : undefined}
@@ -469,6 +510,7 @@ export function TrackerTab({ attackerNum, firstPlayerNum, secondPlayerNum }) {
           isAttacker={secondPlayerNum === attackerNum}
           isActive={!leftIsActive}
           isExpanded={rightIsExpanded}
+          isShrunk={!leftIsActive && expandedInactive}
           onExpand={() => setExpandedInactive(true)}
           onCollapse={() => setExpandedInactive(false)}
           onActiveClick={expandedInactive ? () => setExpandedInactive(false) : undefined}

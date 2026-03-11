@@ -58,7 +58,7 @@ export function Header({ onReset }) {
         <button
           onClick={advancePhase}
           disabled={gameOver}
-          className={`flex items-center gap-1 px-3 h-10 min-w-[48px] rounded-panel text-sm font-medium
+          className={`flex items-center gap-1 px-3 h-12 min-w-[48px] rounded-panel text-sm font-medium
             whitespace-nowrap transition-colors shrink-0
             ${gameOver
               ? 'bg-surface-inset text-text-muted cursor-not-allowed'
@@ -72,7 +72,7 @@ export function Header({ onReset }) {
         <button
           onClick={toggleTimerPause}
           disabled={gameOver}
-          className={`flex items-center justify-center w-10 h-10 rounded-panel transition-colors shrink-0
+          className={`flex items-center justify-center w-12 h-12 rounded-panel transition-colors shrink-0
             ${gameOver
               ? 'text-text-muted cursor-not-allowed'
               : timerPaused
@@ -135,7 +135,7 @@ export function Header({ onReset }) {
         <button
           onClick={undo}
           disabled={!canUndo}
-          className="flex items-center justify-center w-10 h-10 rounded-panel text-chrome
+          className="flex items-center justify-center w-12 h-12 rounded-panel text-chrome
             hover:text-chrome-hover hover:bg-surface-inset disabled:text-text-muted disabled:cursor-not-allowed transition-colors"
           title="Undo last action"
         >
@@ -145,7 +145,7 @@ export function Header({ onReset }) {
         {/* Action log toggle */}
         <button
           onClick={() => setLogOpen((o) => !o)}
-          className={`flex items-center justify-center w-10 h-10 rounded-panel transition-colors
+          className={`flex items-center justify-center w-12 h-12 rounded-panel transition-colors
             ${logOpen ? 'text-text-primary bg-surface-inset' : 'text-chrome hover:text-chrome-hover hover:bg-surface-inset'}`}
           title="Action log"
         >
@@ -155,7 +155,7 @@ export function Header({ onReset }) {
         {/* Setup / Reset */}
         <button
           onClick={onReset}
-          className="text-xs text-text-muted hover:text-text-secondary px-2 h-10 rounded-panel whitespace-nowrap transition-colors"
+          className="text-xs text-text-muted hover:text-text-secondary px-3 h-12 rounded-panel whitespace-nowrap transition-colors"
         >
           ↩ Setup
         </button>

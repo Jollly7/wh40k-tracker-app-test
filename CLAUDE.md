@@ -521,9 +521,9 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 - [x] Scannable at a glance: phase headers, clear text, good tap targets
 
 #### Phase 9 — Polish Pass
-- [ ] Full tablet layout review at 1280×800px landscape
-- [ ] Touch target audit — all interactive elements minimum 48×48px
-- [ ] Contrast check — readable at arm's length
+- [x] Full tablet layout review at 1280×800px landscape
+- [x] Touch target audit — all interactive elements minimum 48×48px
+- [x] Contrast check — readable at arm's length
 - [x] PWA manifest configured (name, icons, theme colour)
 - [x] "Add to Home Screen" tested on Samsung Galaxy Tab
 
@@ -578,7 +578,7 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 - Single Pause/Play button (Lucide icons) in center-right freezes/resumes both timers simultaneously; green when paused (▶), gray when running (⏸)
 - Round counter displays as "Round X/5" (not "R1/5")
 - Secondary cards: `hand: { p1: [null, null], p2: [null, null] }` is top-level store state; `drawCard(player, slot, cardName)` removes from deck and fills slot; `discardCard(player, slot)` clears slot and appends card to bottom of deck; both snapshot for undo
-- Secondary card UI lives in `TrackerTab.jsx` as `SecondaryCardSlot` and `DrawModal` components; shown in both active and inactive panels; fixed width `w-40 aspect-[7/10]` (sized to fit longest card name "Storm Hostile Objective" on one line); tapping the card image opens a lightbox pop-out animating from the card's actual position
+- Secondary card UI lives in `TrackerTab.jsx` as `SecondaryCardSlot` and `DrawModal` components; shown in both active and inactive panels; tapping the card image opens a lightbox pop-out animating from the card's actual position; secondary cards are positioned top-right alongside CP and VP total rows (right column of a two-column layout), with the VP table running full-width beneath; collapsed/inactive sliver shows only `MiniVPTable` (no cards); card slots stretch to match the left column height (`self-stretch h-full` on right column, `flex-1` on slot row, `h-full` on each slot wrapper); filled slot image uses `flex-1 object-cover object-top` to fill height and crop from top; card name label removed from filled slots; `DrawModalCard` in the pick modal is unaffected (still shows aspect ratio + name)
 - Mission card lightbox (primary mission sidebar) and secondary card lightbox both use the same pattern: `getBoundingClientRect()` on click, compute `dx`/`dy` from card centre to viewport centre, inject into `@keyframes` via `<style>` tag, spring easing `cubic-bezier(0.34, 1.56, 0.64, 1)`, tap backdrop to close
 - DrawModal does NOT close on backdrop tap (no backdrop onClick handler) — user must tap cancel (X) or select a card
 - Secondary card buttons use `e.stopPropagation()` to prevent triggering the inactive panel's expand-on-click behaviour
