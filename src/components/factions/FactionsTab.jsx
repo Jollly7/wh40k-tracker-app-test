@@ -1,33 +1,36 @@
 import { Plus } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
+import { GENERAL_REMINDERS, FACTION_REMINDERS, DETACHMENT_REMINDERS } from '../../data/reminders';
 
-const PHASE_REMINDERS = [
-  {
-    phase: 'Command Phase',
-    text: 'Remember faction-specific Command phase abilities and Aura effects. Check detachment rules that activate here. Battle-shock tests also happen in this phase.',
-  },
-  {
-    phase: 'Movement Phase',
-    text: 'Check unit movement values and special movement rules for your detachment. Note any abilities that trigger on Advance.',
-  },
-  {
-    phase: 'Shooting Phase',
-    text: 'Review faction Stratagems usable during the Shooting phase. Check any ranged ability triggers.',
-  },
-  {
-    phase: 'Charge Phase',
-    text: 'Check if any faction abilities trigger on successful or failed charges. Note Overwatch rules for your army.',
-  },
-  {
-    phase: 'Fight Phase',
-    text: 'Note faction Fight phase Stratagems and melee ability triggers. Check activation order rules.',
-  },
-];
+const PHASE_NAMES = ['command', 'movement', 'shooting', 'charge', 'fight'];
+const PHASE_LABELS = {
+  command:  'Command Phase',
+  movement: 'Movement Phase',
+  shooting: 'Shooting Phase',
+  charge:   'Charge Phase',
+  fight:    'Fight Phase',
+};
+
+function getReminders(faction, detachment) {
+  const merged = {};
+  for (const phase of PHASE_NAMES) {
+    const items = [
+      ...(GENERAL_REMINDERS[phase] ?? []),
+      ...(FACTION_REMINDERS[faction]?.[phase] ?? []),
+      ...(DETACHMENT_REMINDERS[faction]?.[detachment]?.[phase] ?? []),
+    ];
+    if (items.length) merged[phase] = items;
+  }
+  return merged;
+}
 
 function FactionColumn({ playerNum, isAttacker, isLeft }) {
   const player     = useGameStore((s) => s.players[playerNum]);
   const accentText = isAttacker ? 'text-danger' : 'text-success';
   const divider    = isLeft ? 'border-r border-border-subtle' : '';
+
+  const reminders = getReminders(player.faction, player.detachment);
+  const hasReminders = Object.keys(reminders).length > 0;
 
   return (
     <div className={`flex-1 flex flex-col overflow-hidden bg-surface-base ${divider}`}>
@@ -43,12 +46,27 @@ function FactionColumn({ playerNum, isAttacker, isLeft }) {
       {/* Scrollable reminders */}
       <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-5">
 
-        {PHASE_REMINDERS.map(({ phase, text }) => (
-          <div key={phase}>
-            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">{phase}</h3>
-            <p className="text-sm text-text-secondary leading-relaxed">{text}</p>
-          </div>
-        ))}
+        {hasReminders ? (
+          PHASE_NAMES.map((phase) =>
+            reminders[phase] ? (
+              <div key={phase}>
+                <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">
+                  {PHASE_LABELS[phase]}
+                </h3>
+                <ul className="flex flex-col gap-1">
+                  {reminders[phase].map((text, i) => (
+                    <li key={i} className="flex items-start gap-1.5 text-sm text-text-secondary leading-snug">
+                      <span className="shrink-0 mt-1.5 w-1 h-1 rounded-full bg-text-muted" />
+                      {text}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null
+          )
+        ) : (
+          <p className="text-sm text-text-muted">Select a faction to see reminders.</p>
+        )}
 
         {/* Add note stub */}
         <button className="flex items-center gap-2 px-3 py-3 rounded-panel border border-dashed border-border-subtle

@@ -67,7 +67,7 @@ Build these rules directly into the app logic — do not make the user configure
 
 ### Command Points (CP)
 - Each player **starts with 0 CP** at game start
-- Each player **gains +1 CP at the start of their Command Phase** each turn
+- Each player **gains +1 CP at the start of both Command Phases** each turn
 - CP are spent on Stratagems (tracked as spend events, not enforced)
 - CP minimum is 0 — cannot go negative
 
@@ -541,11 +541,11 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 
 > Update this section at the end of each session.
 
-**Last updated:** 08/03/2026
+**Last updated:** 15/03/2026
 
-**Completed phases:** Phase 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7 (+ cross-cutting features: undo, action log, mission card images, localStorage persistence)
+**Completed phases:** Phase 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 9 (+ cross-cutting features: undo, action log, mission card images, localStorage persistence)
 
-**In progress:** Phase 9 — Polish Pass
+**v1.4 completed:** Phase 1 (faction/detachment reminders), Phase 2 (timestamp-based timer persistence fix)
 
 **Next up:** v2 prep
 
@@ -553,7 +553,7 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 - Space Marine chapters (Black Templars, Blood Angels, Dark Angels, Deathwatch, Imperial Fists, Iron Hands, Raven Guard, Salamanders, Ultramarines, White Scars) are hidden from the faction picker in v1 — only "Space Marines" is shown; chapter data retained in `data/factions.js`, excluded via `HIDDEN_FACTIONS` in `SetupScreen.jsx`
 - Begin Battle button requires Attacker/Defender and First Turn roll-offs to be set (not always-tappable as originally specced)
 - Secondary deck shuffle happens on `startGame()` in the store
-- Player name removed from header (deviation from original Phase 2 spec) — active player shown via left panel accent colour + 60/40 split
+- Player name removed from header (deviation from original Phase 2 spec) — active player shown via left panel accent colour + 90/10 split
 - Undo history excludes timer and setup state; snapshots all in-game mutations
 - Mission card images: drop files into `public/missions/<deck>/` and update `src/data/missionImages.js` to point to the filename
 - Battle round structure is 5 phases — Battle-shock is a step within Command Phase, not a separate phase; all references updated accordingly
@@ -569,11 +569,11 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 - Auto +1 CP happens inside `advancePhase` (store) when landing on phase 0, not in any component; grants +1 to **both** players at each Command Phase transition
 - VP table column headers are conditional: active/expanded panel shows full names (Primary / Secondary 1 / Secondary 2 / Challenger); inactive panel shows abbreviated (Primary / Sec 1 / Sec 2 / Chall)
 - CP and VP buttons use `onPointerDown` + `e.preventDefault()` to prevent browser double-fire (extra synthetic click events on fast presses)
-- Per-player timers (`timers.p1` / `timers.p2` in store) replace the original single round timer; driven by a `setInterval` in Header's `useEffect`; only the active player's timer ticks; both freeze when `gameOver: true` or `timerPaused: true`
-- `timerPaused: true` is the initial state — timers do not tick until the user manually starts them; `toggleTimerPause()` action in store flips the flag
-- localStorage persistence uses Zustand `persist` middleware (`zustand/middleware`) with key `wh40k-game-state` version 1; `history` and `timerPaused` are excluded from persistence; `timerPaused` is forced to `true` on rehydration via `onRehydrateStorage`; `resetGame()` naturally clears persisted state by writing `initialState` back to localStorage
+- Per-player timers (`timers.p1` / `timers.p2` in store) are **timestamp-based**: `timers.p1/p2` hold banked elapsed seconds; `timerStartedAt` holds a `Date.now()` anchor set on resume and cleared on pause; displayed time = `banked + (Date.now() - timerStartedAt) / 1000` computed at render; `setInterval` in Header only triggers re-renders, never mutates the store; immune to backgrounding
+- `timerPaused: true` is the initial state — timers do not start until the user manually resumes them; `toggleTimerPause()` banks elapsed and clears/sets the anchor
+- localStorage persistence uses Zustand `persist` middleware (`zustand/middleware`) with key `wh40k-game-state` version 1; `history`, `timerPaused`, and `timerStartedAt` are excluded from persistence; both are forced to their safe initial values (`true` / `null`) on rehydration via `onRehydrateStorage`; `resetGame()` naturally clears persisted state by writing `initialState` back to localStorage
 - Game over sets `gameOver: true` in the store when advancing past Round 5 second-player Fight Phase; blocks `advancePhase`; Next Phase button labelled "Game Over" and disabled; inline banner beneath header; no modal
-- Log timestamps use combined elapsed (`timers.p1 + timers.p2`) as total game time
+- Log timestamps use combined elapsed (`timers.p1 + timers.p2 + live`) as total game time, where `live` accounts for un-banked time since the last resume anchor
 - Header is three sections: left (Round X/5 · Phase Name · Next Phase button), center (P1 timer · P1 CP/VP/name · vs · P2 name/CP/VP · P2 timer · Pause), right (Undo · Log · Setup); left/right are `shrink-0`, center is `flex-1 justify-center`
 - Single Pause/Play button (Lucide icons) in center-right freezes/resumes both timers simultaneously; green when paused (▶), gray when running (⏸)
 - Round counter displays as "Round X/5" (not "R1/5")
@@ -591,10 +591,25 @@ Add to home screen via Chrome → "Add to Home Screen" for PWA install.
 - Also had some issues initialising a github repo for the project, but solved them and eventually hosted the app on a github page: https://jollly7.github.io/wh40k-tracker-app-test/
 
 
-## v1.3 Project Plan
+## v1.4 Project Plan
 
 ### Phase Detail
 
 #### Phase 1 - Game, Faction and Detachment reminders per battle phase
-[x] - Create location to store instructions (`src/data/reminders.js`)
-[x] - Add instructions for Genestealers - Biosanctic Broodsurge and Orks - War Horde
+- [x] - Create location to store instructions (`src/data/reminders.js`)
+- [x] - Add instructions for Genestealers - Biosanctic Broodsurge and Orks - War Horde
+- [x] - Add location for faction instructions in reminders.js. I.e. we have general_reminders for all armies. We have faction_reminders for specific detachments. We should change faction reminders for factions, and add detachment reminders for detachments.
+
+#### Phase 2 - Timer persistence fix (timestamp-based timers)
+- [x] Replace tick-based timer counter with timestamp anchor approach
+- [x] Add `timerStartedAt: null` to store state — `Date.now()` ms timestamp set on resume, cleared on pause
+- [x] `timers.p1` / `timers.p2` now store **banked** elapsed seconds (written only on pause or player switch, not every second)
+- [x] Remove `tickTimer` store action entirely
+- [x] `toggleTimerPause`: pause → bank live elapsed into `timers[activePlayer]`, set `timerStartedAt: null`; resume → set `timerStartedAt: Date.now()`
+- [x] `advancePhase`: same-player phases re-anchor (`timerStartedAt ?? Date.now()`); player-switch transitions bank outgoing player's timer then set new anchor
+- [x] Header `setInterval` now only calls `setTick(t => t+1)` to trigger re-render — no store mutation
+- [x] Displayed time computed at render: `timers[player] + (Date.now() - timerStartedAt) / 1000` for active player; banked value for inactive
+- [x] `formatTime` updated to floor float input before `% 60`
+- [x] `addLog` includes live un-banked elapsed in log timestamps
+- [x] `timerStartedAt` excluded from localStorage persistence; forced to `null` on rehydration
+

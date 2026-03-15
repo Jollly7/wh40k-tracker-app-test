@@ -47,6 +47,7 @@ const initialState = {
   firstPlayer: 1,       // player number who goes first; captured in beginBattle
   timers: { p1: 0, p2: 0 },
   timerPaused: true,
+  timerStartedAt: null,
   players: {
     1: initialPlayerState('Player 1'),
     2: initialPlayerState('Player 2'),
@@ -70,7 +71,9 @@ export const useGameStore = create(
   // Timers and setup fields are excluded — they don't need to be undone.
   const addLog = (message) => {
     const s = get();
-    const elapsed = s.timers.p1 + s.timers.p2;
+    const live = s.timerStartedAt !== null && !s.timerPaused
+      ? (Date.now() - s.timerStartedAt) / 1000 : 0;
+    const elapsed = s.timers.p1 + s.timers.p2 + live;
     set((st) => ({ log: [{ message, timestamp: elapsed }, ...st.log].slice(0, 20) }));
   };
 
@@ -188,20 +191,31 @@ export const useGameStore = create(
     const nextPhase = s.currentPhase + 1;
     if (nextPhase < 5) {
       addLog(PHASES[nextPhase].name);
-      set({ currentPhase: nextPhase, timerPaused: false });
+      set((s) => ({
+        currentPhase: nextPhase,
+        timerPaused: false,
+        timerStartedAt: s.timerStartedAt ?? Date.now(),
+      }));
     } else if (s.activePlayer === firstPlayer) {
       // First player's Fight Phase ends → second player's Command Phase begins
       addLog(`${s.players[secondPlayer].name}'s turn — ${PHASES[0].name}`);
       addLog('Command Phase: both players gain +1 CP');
-      set((st) => ({
-        currentPhase: 0,
-        activePlayer: secondPlayer,
-        timerPaused: false,
-        players: {
-          1: { ...st.players[1], cp: st.players[1].cp + 1 },
-          2: { ...st.players[2], cp: st.players[2].cp + 1 },
-        },
-      }));
+      set((st) => {
+        const banked = st.timerStartedAt !== null
+          ? st.timers[`p${st.activePlayer}`] + (Date.now() - st.timerStartedAt) / 1000
+          : st.timers[`p${st.activePlayer}`];
+        return {
+          currentPhase: 0,
+          activePlayer: secondPlayer,
+          timerPaused: false,
+          timerStartedAt: Date.now(),
+          timers: { ...st.timers, [`p${st.activePlayer}`]: banked },
+          players: {
+            1: { ...st.players[1], cp: st.players[1].cp + 1 },
+            2: { ...st.players[2], cp: st.players[2].cp + 1 },
+          },
+        };
+      });
     } else if (s.round === 5) {
       // End of Round 5 — game over
       addLog('Battle ended — Round 5 complete');
@@ -211,28 +225,47 @@ export const useGameStore = create(
       const newRound = s.round + 1;
       addLog(`Round ${newRound} — ${PHASES[0].name}`);
       addLog('Command Phase: both players gain +1 CP');
-      set((st) => ({
-        currentPhase: 0,
-        activePlayer: firstPlayer,
-        round: newRound,
-        timerPaused: false,
-        players: {
-          1: { ...st.players[1], cp: st.players[1].cp + 1 },
-          2: { ...st.players[2], cp: st.players[2].cp + 1 },
-        },
-      }));
+      set((st) => {
+        const banked = st.timerStartedAt !== null
+          ? st.timers[`p${st.activePlayer}`] + (Date.now() - st.timerStartedAt) / 1000
+          : st.timers[`p${st.activePlayer}`];
+        return {
+          currentPhase: 0,
+          activePlayer: firstPlayer,
+          round: newRound,
+          timerPaused: false,
+          timerStartedAt: Date.now(),
+          timers: { ...st.timers, [`p${st.activePlayer}`]: banked },
+          players: {
+            1: { ...st.players[1], cp: st.players[1].cp + 1 },
+            2: { ...st.players[2], cp: st.players[2].cp + 1 },
+          },
+        };
+      });
     }
   },
 
   // --- Round / Player ---
   setActivePlayer: (player) => { saveSnapshot(); set({ activePlayer: player }); },
 
-  // --- Per-player timers (driven by Header useEffect, not the store) ---
-  tickTimer: (player) => set((s) => ({
-    timers: { ...s.timers, [`p${player}`]: s.timers[`p${player}`] + 1 },
-  })),
-
-  toggleTimerPause: () => set((s) => ({ timerPaused: !s.timerPaused })),
+  // --- Per-player timers ---
+  // Timers use a timestamp anchor: banked seconds in timers.p1/p2, live elapsed computed in Header.
+  toggleTimerPause: () => set((s) => {
+    if (!s.timerPaused) {
+      // Pausing: bank live elapsed for active player, clear anchor
+      const banked = s.timerStartedAt !== null
+        ? s.timers[`p${s.activePlayer}`] + (Date.now() - s.timerStartedAt) / 1000
+        : s.timers[`p${s.activePlayer}`];
+      return {
+        timerPaused: true,
+        timerStartedAt: null,
+        timers: { ...s.timers, [`p${s.activePlayer}`]: banked },
+      };
+    } else {
+      // Resuming: set anchor to now
+      return { timerPaused: false, timerStartedAt: Date.now() };
+    }
+  }),
 
   // --- Secondary card hand ---
   drawCard: (player, slot, cardName) => {
@@ -304,10 +337,10 @@ export const useGameStore = create(
       version: 1,
       // Exclude undo history (ephemeral) from persistence.
       // timerPaused is also excluded so it always rehydrates as true (see onRehydrateStorage).
-      partialize: ({ history, timerPaused, ...rest }) => rest,
-      // After rehydration, force timers paused so they don't auto-start.
+      partialize: ({ history, timerPaused, timerStartedAt, ...rest }) => rest,
+      // After rehydration, force timers paused and clear any stale anchor.
       onRehydrateStorage: () => (state) => {
-        if (state) state.timerPaused = true;
+        if (state) { state.timerPaused = true; state.timerStartedAt = null; }
       },
     }
   )

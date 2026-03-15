@@ -4,8 +4,9 @@ import { useGameStore } from '../../store/gameStore';
 import { PHASES } from '../../data/phases';
 
 function formatTime(seconds) {
-  const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const s = (seconds % 60).toString().padStart(2, '0');
+  const total = Math.floor(seconds);
+  const m = Math.floor(total / 60).toString().padStart(2, '0');
+  const s = (total % 60).toString().padStart(2, '0');
   return `${m}:${s}`;
 }
 
@@ -16,29 +17,39 @@ export function Header({ onReset }) {
   const gameOver         = useGameStore((s) => s.gameOver);
   const timers           = useGameStore((s) => s.timers);
   const timerPaused      = useGameStore((s) => s.timerPaused);
+  const timerStartedAt   = useGameStore((s) => s.timerStartedAt);
   const canUndo          = useGameStore((s) => s.history.length > 0);
   const undo             = useGameStore((s) => s.undo);
   const advancePhase     = useGameStore((s) => s.advancePhase);
-  const tickTimer        = useGameStore((s) => s.tickTimer);
   const toggleTimerPause = useGameStore((s) => s.toggleTimerPause);
   const log              = useGameStore((s) => s.log);
   const p1               = useGameStore((s) => s.players[1]);
   const p2               = useGameStore((s) => s.players[2]);
 
   const [logOpen, setLogOpen] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [, setTick] = useState(0);
 
   const phaseName = PHASES[currentPhase]?.name ?? '—';
+
+  // Displayed time = banked seconds + live elapsed since last resume anchor.
+  // The inactive player's timer is already banked and shows its stored value.
+  const liveExtra = timerStartedAt !== null && !timerPaused && !gameOver
+    ? (Date.now() - timerStartedAt) / 1000 : 0;
+  const displayedP1 = activePlayer === 1 ? timers.p1 + liveExtra : timers.p1;
+  const displayedP2 = activePlayer === 2 ? timers.p2 + liveExtra : timers.p2;
 
   // Role-based colours: attacker = danger (red), defender = success (green)
   const p1Color = p1.role === 'attacker' ? 'text-danger' : 'text-success';
   const p2Color = p2.role === 'attacker' ? 'text-danger' : 'text-success';
 
-  // Tick the active player's timer every second; freeze when game is over or paused
+  // Re-render every second while timers are running so displayed time stays current.
+  // The store is not mutated here — elapsed is computed from timerStartedAt at render time.
   useEffect(() => {
     if (gameOver || timerPaused) return;
-    const id = setInterval(() => tickTimer(activePlayer), 1000);
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
-  }, [activePlayer, gameOver, timerPaused, tickTimer]);
+  }, [gameOver, timerPaused]);
 
   return (
     <header className="h-14 flex items-center px-3 bg-surface-panel border-b border-border-subtle shadow-panel shrink-0 relative">
@@ -90,7 +101,7 @@ export function Header({ onReset }) {
 
         {/* P1 Timer */}
         <span className={`font-display tabular-nums text-sm ${activePlayer === 1 && !gameOver && !timerPaused ? p1Color : 'text-text-muted'}`}>
-          {formatTime(timers.p1)}
+          {formatTime(displayedP1)}
         </span>
 
         <span className="text-border-strong">·</span>
@@ -123,7 +134,7 @@ export function Header({ onReset }) {
 
         {/* P2 Timer */}
         <span className={`font-display tabular-nums text-sm ${activePlayer === 2 && !gameOver && !timerPaused ? p2Color : 'text-text-muted'}`}>
-          {formatTime(timers.p2)}
+          {formatTime(displayedP2)}
         </span>
 
       </div>
@@ -154,12 +165,38 @@ export function Header({ onReset }) {
 
         {/* Setup / Reset */}
         <button
-          onClick={onReset}
+          onClick={() => setConfirmReset(true)}
           className="text-xs text-text-muted hover:text-text-secondary px-3 h-12 rounded-panel whitespace-nowrap transition-colors"
         >
           ↩ Setup
         </button>
       </div>
+
+      {/* Restart confirmation modal */}
+      {confirmReset && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-surface-raised border border-border-subtle rounded-panel shadow-raised p-6 w-80 flex flex-col gap-5">
+            <p className="text-sm text-text-primary text-center leading-snug">
+              Restart setup?<br />
+              <span className="text-text-secondary">All current game data will be lost.</span>
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmReset(false)}
+                className="flex-1 h-12 rounded-panel bg-surface-inset text-text-primary text-sm font-medium hover:bg-surface-panel transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setConfirmReset(false); onReset(); }}
+                className="flex-1 h-12 rounded-panel bg-surface-inset text-red-500 text-sm font-medium hover:bg-surface-panel transition-colors"
+              >
+                Restart
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Log dropdown */}
       {logOpen && (

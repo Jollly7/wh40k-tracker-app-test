@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Lock, X } from 'lucide-react';
 import { useGameStore } from '../../store/gameStore';
 import { SECONDARY_MISSION_IMAGES } from '../../data/missionImages';
-import { FACTION_REMINDERS, GENERAL_REMINDERS } from '../../data/reminders';
+import { GENERAL_REMINDERS, FACTION_REMINDERS, DETACHMENT_REMINDERS } from '../../data/reminders';
+
+const PHASE_KEYS = ['command', 'movement', 'shooting', 'charge', 'fight'];
 
 const ROLE_ACCENT = {
   attacker: {
@@ -510,21 +512,19 @@ function ReminderList({ items }) {
 }
 
 function PhaseReminders({ faction, detachment, phaseIndex }) {
-  const general = GENERAL_REMINDERS.filter((r) => r.phase === phaseIndex);
-  const faction_ = (FACTION_REMINDERS[`${faction}||${detachment}`] ?? []).filter(
-    (r) => r.phase === phaseIndex
-  );
+  const phaseKey = PHASE_KEYS[phaseIndex];
+  const items = [
+    ...(GENERAL_REMINDERS[phaseKey] ?? []),
+    ...(FACTION_REMINDERS[faction]?.[phaseKey] ?? []),
+    ...(DETACHMENT_REMINDERS[faction]?.[detachment]?.[phaseKey] ?? []),
+  ];
 
-  if (general.length === 0 && faction_.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-xs text-text-muted uppercase tracking-wide">Phase Reminders</span>
-      {general.length > 0 && <ReminderList items={general} />}
-      {general.length > 0 && faction_.length > 0 && (
-        <hr className="border-border-subtle" />
-      )}
-      {faction_.length > 0 && <ReminderList items={faction_} />}
+      <ReminderList items={items.map((text) => ({ text }))} />
     </div>
   );
 }
