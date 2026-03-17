@@ -10,7 +10,7 @@ function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
-export function Header({ onReset }) {
+export function Header({ onReset, onViewSummary }) {
   const round            = useGameStore((s) => s.round);
   const currentPhase     = useGameStore((s) => s.currentPhase);
   const activePlayer     = useGameStore((s) => s.activePlayer);
@@ -67,7 +67,7 @@ export function Header({ onReset }) {
         </span>
 
         <button
-          onClick={advancePhase}
+          onPointerDown={(e) => { e.preventDefault(); if (!gameOver) advancePhase(); }}
           disabled={gameOver}
           className={`flex items-center gap-1 px-3 h-12 min-w-[48px] rounded-panel text-sm font-medium
             whitespace-nowrap transition-colors shrink-0
@@ -96,7 +96,7 @@ export function Header({ onReset }) {
         </button>
       </div>
 
-      {/* CENTER SECTION — P1 Timer · Scoreboard · P2 Timer */}
+      {/* CENTER SECTION — P1 Timer · P1name [CP/VP] vs [CP/VP] P2name · P2 Timer */}
       <div className="flex-1 flex items-center justify-center gap-1.5 text-xs whitespace-nowrap min-w-0">
 
         {/* P1 Timer */}
@@ -106,28 +106,38 @@ export function Header({ onReset }) {
 
         <span className="text-border-strong">·</span>
 
-        {/* P1 stats */}
-        <span className="text-text-secondary">
-          <span className="text-text-primary font-medium">{p1.cp}</span>cp
-        </span>
-        <span className="text-text-secondary">
-          <span className="text-text-primary font-medium">{p1.vp.total}</span>vp
-        </span>
+        {/* P1 name */}
         <span className={`font-display font-semibold text-sm ${activePlayer === 1 ? p1Color : 'text-text-muted'}`}>
           {p1.name}
         </span>
 
+        {/* P1 stat block */}
+        <div className="flex flex-col items-center leading-none gap-0.5">
+          <span className="font-display text-lg font-semibold text-text-primary tabular-nums">
+            {p1.cp}<span className="text-[10px] font-normal text-text-secondary ml-0.5">CP</span>
+          </span>
+          <hr className="w-full border-border-subtle" />
+          <span className="font-display text-lg font-semibold text-text-primary tabular-nums">
+            {p1.vp.total}<span className="text-[10px] font-normal text-text-secondary ml-0.5">VP</span>
+          </span>
+        </div>
+
         <span className="text-text-muted px-0.5">vs</span>
 
-        {/* P2 stats */}
+        {/* P2 stat block */}
+        <div className="flex flex-col items-center leading-none gap-0.5">
+          <span className="font-display text-lg font-semibold text-text-primary tabular-nums">
+            {p2.cp}<span className="text-[10px] font-normal text-text-secondary ml-0.5">CP</span>
+          </span>
+          <hr className="w-full border-border-subtle" />
+          <span className="font-display text-lg font-semibold text-text-primary tabular-nums">
+            {p2.vp.total}<span className="text-[10px] font-normal text-text-secondary ml-0.5">VP</span>
+          </span>
+        </div>
+
+        {/* P2 name */}
         <span className={`font-display font-semibold text-sm ${activePlayer === 2 ? p2Color : 'text-text-muted'}`}>
           {p2.name}
-        </span>
-        <span className="text-text-secondary">
-          <span className="text-text-primary font-medium">{p2.cp}</span>cp
-        </span>
-        <span className="text-text-secondary">
-          <span className="text-text-primary font-medium">{p2.vp.total}</span>vp
         </span>
 
         <span className="text-border-strong">·</span>
@@ -162,6 +172,16 @@ export function Header({ onReset }) {
         >
           <ScrollText size={16} />
         </button>
+
+        {/* View Summary — only when game is over */}
+        {gameOver && (
+          <button
+            onClick={onViewSummary}
+            className="text-xs text-text-secondary hover:text-text-primary px-3 h-12 rounded-panel whitespace-nowrap transition-colors"
+          >
+            Summary
+          </button>
+        )}
 
         {/* Setup / Reset */}
         <button

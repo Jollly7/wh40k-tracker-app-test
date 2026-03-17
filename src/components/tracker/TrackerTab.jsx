@@ -405,6 +405,18 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, isShr
                   <span className="font-display font-bold text-text-primary tabular-nums leading-none">{player.vp.total}</span>
                 </div>
               </div>
+              <button
+                onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); adjustCP(playerNum, -1); }}
+                onClick={(e) => e.stopPropagation()}
+                disabled={player.cp === 0}
+                className="w-12 h-12 self-center rounded-panel bg-surface-inset border border-border-subtle
+                  hover:bg-surface-panel hover:border-border-strong disabled:opacity-25
+                  disabled:cursor-not-allowed text-lg font-bold text-text-primary flex items-center
+                  justify-center transition-colors shrink-0"
+                aria-label="Spend CP"
+              >
+                −
+              </button>
               <MiniVPTable playerNum={playerNum} currentRound={round} />
             </>
           ) : (
@@ -513,18 +525,27 @@ function ReminderList({ items }) {
 
 function PhaseReminders({ faction, detachment, phaseIndex }) {
   const phaseKey = PHASE_KEYS[phaseIndex];
-  const items = [
-    ...(GENERAL_REMINDERS[phaseKey] ?? []),
-    ...(FACTION_REMINDERS[faction]?.[phaseKey] ?? []),
-    ...(DETACHMENT_REMINDERS[faction]?.[detachment]?.[phaseKey] ?? []),
-  ];
 
-  if (items.length === 0) return null;
+  const groups = [
+    { label: 'Faction',    items: FACTION_REMINDERS[faction]?.[phaseKey] ?? [] },
+    { label: 'Detachment', items: DETACHMENT_REMINDERS[faction]?.[detachment]?.[phaseKey] ?? [] },
+    { label: 'General',    items: GENERAL_REMINDERS[phaseKey] ?? [] },
+  ].filter((g) => g.items.length > 0);
+
+  if (groups.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-xs text-text-muted uppercase tracking-wide">Phase Reminders</span>
-      <ReminderList items={items.map((text) => ({ text }))} />
+      {groups.map((group, gi) => (
+        <div key={group.label}>
+          {groups.length > 1 && (
+            <span className="text-[10px] text-text-muted uppercase tracking-wide">{group.label}</span>
+          )}
+          <ReminderList items={group.items.map((text) => ({ text }))} />
+          {gi < groups.length - 1 && <hr className="border-border-subtle mt-1.5" />}
+        </div>
+      ))}
     </div>
   );
 }

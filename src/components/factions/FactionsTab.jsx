@@ -14,12 +14,12 @@ const PHASE_LABELS = {
 function getReminders(faction, detachment) {
   const merged = {};
   for (const phase of PHASE_NAMES) {
-    const items = [
-      ...(GENERAL_REMINDERS[phase] ?? []),
-      ...(FACTION_REMINDERS[faction]?.[phase] ?? []),
-      ...(DETACHMENT_REMINDERS[faction]?.[detachment]?.[phase] ?? []),
-    ];
-    if (items.length) merged[phase] = items;
+    const groups = [
+      { label: 'Faction',    items: FACTION_REMINDERS[faction]?.[phase] ?? [] },
+      { label: 'Detachment', items: DETACHMENT_REMINDERS[faction]?.[detachment]?.[phase] ?? [] },
+      { label: 'General',    items: GENERAL_REMINDERS[phase] ?? [] },
+    ].filter((g) => g.items.length > 0);
+    if (groups.length) merged[phase] = groups;
   }
   return merged;
 }
@@ -53,14 +53,22 @@ function FactionColumn({ playerNum, isAttacker, isLeft }) {
                 <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wide mb-1">
                   {PHASE_LABELS[phase]}
                 </h3>
-                <ul className="flex flex-col gap-1">
-                  {reminders[phase].map((text, i) => (
-                    <li key={i} className="flex items-start gap-1.5 text-sm text-text-secondary leading-snug">
-                      <span className="shrink-0 mt-1.5 w-1 h-1 rounded-full bg-text-muted" />
-                      {text}
-                    </li>
-                  ))}
-                </ul>
+                {reminders[phase].map((group, gi) => (
+                  <div key={group.label}>
+                    {reminders[phase].length > 1 && (
+                      <span className="text-[10px] text-text-muted uppercase tracking-wide">{group.label}</span>
+                    )}
+                    <ul className="flex flex-col gap-1">
+                      {group.items.map((text, i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-sm text-text-secondary leading-snug">
+                          <span className="shrink-0 mt-1.5 w-1 h-1 rounded-full bg-text-muted" />
+                          {text}
+                        </li>
+                      ))}
+                    </ul>
+                    {gi < reminders[phase].length - 1 && <hr className="border-border-subtle my-1.5" />}
+                  </div>
+                ))}
               </div>
             ) : null
           )

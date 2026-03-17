@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { Header } from './Header';
 import { TabBar } from './TabBar';
@@ -6,6 +6,7 @@ import { ObjectivesSidebar } from '../objectives/ObjectivesSidebar';
 import { TrackerTab } from '../tracker/TrackerTab';
 import { PhasesTab } from '../phases/PhasesTab';
 import { FactionsTab } from '../factions/FactionsTab';
+import { GameSummaryModal } from '../GameSummaryModal';
 
 export function GameScreen() {
   const resetGame = useGameStore((s) => s.resetGame);
@@ -16,11 +17,17 @@ export function GameScreen() {
   const attackerNum     = p1Role === 'attacker' ? 1 : 2;
   const secondPlayerNum = firstPlayer === 1 ? 2 : 1;
 
-  const [activeTab, setActiveTab] = useState('tracker');
+  const [activeTab, setActiveTab]     = useState('tracker');
+  const [showSummary, setShowSummary] = useState(false);
+
+  // Auto-open modal when game ends
+  useEffect(() => {
+    if (gameOver) setShowSummary(true);
+  }, [gameOver]);
 
   return (
     <div className="h-screen overflow-hidden flex flex-col bg-surface-base text-text-primary">
-      <Header onReset={resetGame} />
+      <Header onReset={resetGame} onViewSummary={() => setShowSummary(true)} />
 
       {gameOver && (
         <div className="px-4 py-1.5 bg-danger-muted border-b border-danger/30 text-center
@@ -61,6 +68,14 @@ export function GameScreen() {
 
         <ObjectivesSidebar />
       </div>
+
+      {showSummary && (
+        <GameSummaryModal
+          firstPlayerNum={firstPlayer}
+          secondPlayerNum={secondPlayerNum}
+          onClose={() => setShowSummary(false)}
+        />
+      )}
     </div>
   );
 }
