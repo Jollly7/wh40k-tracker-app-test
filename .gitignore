@@ -23,6 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 *.ros
+Tau Colosseum.json
 
 # archive files
 archive_*.md

@@ -111,7 +111,10 @@ Each round has two Player Turns (Player 1 then Player 2), each with 5 phases:
 - **Accent colours are role-based**: Attacker = red, Defender = green
 - No decorative Warhammer imagery — keep it functional
 - Tab-based layout: Tracker · Phases · Factions, one tap from anywhere
-
+- **Touch event handling — all interactive buttons**: Use `onPointerDown` + `e.preventDefault()` for all game-action buttons. This prevents the browser's touch-to-synthetic-click cascade from firing the handler twice on the tablet. `e.preventDefault()` in `onPointerDown` suppresses the downstream `click` event entirely.
+  - **Exception — buttons inside a clickable container** (e.g. a panel that expands on tap): also add `e.stopPropagation()` to prevent the tap bubbling to the parent. Use the split pattern: `onPointerDown={(e) => e.stopPropagation()}` + `onClick={(e) => { e.stopPropagation(); handler(); }}` — this avoids re-render-induced propagation issues when the action triggers a state update.
+  - **Never use bare `onClick`** for CP, VP, phase advance, undo, draw/discard, or timer buttons.
+  - **Exceptions** (leave as `onClick`): file input triggers, `<a>` tags, backdrop/overlay dismiss handlers.
 ---
 
 ## What NOT to Do

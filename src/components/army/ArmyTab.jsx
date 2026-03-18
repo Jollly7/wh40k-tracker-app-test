@@ -5,6 +5,7 @@ import { ArmyPanel } from './ArmyPanel';
 
 const LS_ROSTERS_KEY = 'wh40k-imported-rosters';
 const LS_SELECTION_KEY = 'wh40k-army-selection';
+const LS_ATTACHMENTS_KEY = 'wh40k-leader-attachments';
 
 function loadImportedRosters() {
   try { return JSON.parse(localStorage.getItem(LS_ROSTERS_KEY)) ?? []; } catch { return []; }
@@ -20,6 +21,18 @@ function loadSelection() {
 
 function saveSelection(obj) {
   localStorage.setItem(LS_SELECTION_KEY, JSON.stringify(obj));
+}
+
+function loadAttachments() {
+  try {
+    const val = JSON.parse(localStorage.getItem(LS_ATTACHMENTS_KEY));
+    if (val && typeof val === 'object') return { p1: val.p1 ?? {}, p2: val.p2 ?? {} };
+  } catch {}
+  return { p1: {}, p2: {} };
+}
+
+function saveAttachments(obj) {
+  localStorage.setItem(LS_ATTACHMENTS_KEY, JSON.stringify(obj));
 }
 
 function RosterControls({ rosters, selectedLabel, onSelect, onImport }) {
@@ -88,6 +101,15 @@ export function ArmyTab({ attackerNum }) {
     const saved = loadSelection();
     return { attacker: saved.attacker ?? null, defender: saved.defender ?? null };
   });
+  const [attachments, setAttachments] = useState(() => loadAttachments());
+
+  function updateAttachments(updater) {
+    setAttachments(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      saveAttachments(next);
+      return next;
+    });
+  }
 
   // If a selected label no longer exists in imported rosters, fall back to null
   useEffect(() => {
@@ -135,6 +157,9 @@ export function ArmyTab({ attackerNum }) {
         accentClass="text-danger"
         label={attackerName}
         isLeft
+        pKey="p1"
+        attachments={attachments}
+        setAttachments={updateAttachments}
         importButton={
           <RosterControls
             rosters={rosters}
@@ -149,6 +174,9 @@ export function ArmyTab({ attackerNum }) {
         accentClass="text-success"
         label={defenderName}
         isLeft={false}
+        pKey="p2"
+        attachments={attachments}
+        setAttachments={updateAttachments}
         importButton={
           <RosterControls
             rosters={rosters}

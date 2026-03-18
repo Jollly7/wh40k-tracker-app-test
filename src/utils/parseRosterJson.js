@@ -217,7 +217,21 @@ function parseUnit(sel) {
     .sort();
 
   const composition = getComposition(sel);
-  return { name, stats, ranged, melee, abilities, keywords, composition };
+
+  // isCharacter: true if "Character" appears in the unit's categories
+  const isCharacter = keywords.includes('Character');
+
+  // leaderOf: extract bodyguard unit names from the Leader ability description.
+  // Names are wrapped in ^^...^^ markers e.g. **^^Breacher Team^^**
+  const leaderAbility = abilities.find(a => a.name === 'Leader');
+  let leaderOf = [];
+  if (leaderAbility) {
+    const matches = [...leaderAbility.description.matchAll(/\^\^(.*?)\^\^/g)];
+    const names = matches.map(m => m[1].replace(/\*/g, '').trim()).filter(Boolean);
+    leaderOf = [...new Set(names)].sort();
+  }
+
+  return { name, stats, ranged, melee, abilities, keywords, composition, isCharacter, leaderOf };
 }
 
 /**
