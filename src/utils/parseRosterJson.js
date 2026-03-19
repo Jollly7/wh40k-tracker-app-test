@@ -126,6 +126,7 @@ function collectWeapons(selection, typeName, acc = new Map()) {
         };
         if (isRanged) {
           entry.BS = getChar(chars, 'BS') ?? '-';
+          entry.range = getChar(chars, 'Range') ?? '-';
         } else {
           entry.WS = getChar(chars, 'WS') ?? '-';
         }
