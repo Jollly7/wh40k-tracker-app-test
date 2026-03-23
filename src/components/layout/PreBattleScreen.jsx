@@ -25,7 +25,7 @@ function StepCard({ num, title, description, complete, children }) {
 function CheckRow({ label, checked, onToggle }) {
   return (
     <button
-      onClick={onToggle}
+      onPointerDown={(e) => { e.preventDefault(); onToggle(); }}
       className="flex items-center gap-3 min-h-[48px] w-full text-left select-none"
     >
       <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors
@@ -44,13 +44,13 @@ function RollOffButtons({ p1Name, p2Name, onSelect }) {
   return (
     <div className="flex gap-2">
       <button
-        onClick={() => onSelect(1)}
+        onPointerDown={(e) => { e.preventDefault(); onSelect(1); }}
         className="flex-1 h-12 rounded-panel bg-accent-muted border border-accent hover:bg-accent/10 text-accent text-sm font-medium transition-colors"
       >
         {p1Name} won
       </button>
       <button
-        onClick={() => onSelect(2)}
+        onPointerDown={(e) => { e.preventDefault(); onSelect(2); }}
         className="flex-1 h-12 rounded-panel bg-danger-muted border border-danger hover:bg-danger/10 text-danger text-sm font-medium transition-colors"
       >
         {p2Name} won
@@ -123,7 +123,7 @@ export function PreBattleScreen() {
       {/* Header */}
       <div className="px-4 pt-2 pb-2 flex items-center justify-between border-b border-border-subtle bg-surface-panel shrink-0">
         <h1 className="font-display text-lg font-semibold text-text-primary">Pre-Battle Setup</h1>
-        <button onClick={resetGame} className="text-xs text-text-muted hover:text-text-secondary px-3 h-12 rounded-panel transition-colors">
+        <button onPointerDown={(e) => { e.preventDefault(); resetGame(); }} className="text-xs text-text-muted hover:text-text-secondary px-3 h-12 rounded-panel transition-colors">
           ↩ Setup
         </button>
       </div>
@@ -135,7 +135,7 @@ export function PreBattleScreen() {
           <StepCard num={1} title="Attacker & Defender" description="Roll off — winner chooses role." complete={step1Complete}>
             {step1Complete ? (
               <button
-                onClick={resetStep1}
+                onPointerDown={(e) => { e.preventDefault(); resetStep1(); }}
                 className="w-full text-left text-sm text-text-secondary bg-surface-inset rounded-panel px-3 py-2 min-h-[48px] hover:bg-surface-panel border border-border-subtle transition-colors"
               >
                 <span className="text-accent font-medium">{p1Name}</span>
@@ -155,8 +155,8 @@ export function PreBattleScreen() {
                   <span className={step1Winner === 1 ? 'text-accent' : 'text-danger'}>{playerName(step1Winner)}</span> won — choose role:
                 </p>
                 <div className="flex gap-2">
-                  <button onClick={() => handleRoleChoice('attacker')} className="flex-1 h-12 rounded-panel bg-surface-inset hover:bg-surface-panel border border-border-subtle text-text-primary text-sm font-medium transition-colors">Attack</button>
-                  <button onClick={() => handleRoleChoice('defender')} className="flex-1 h-12 rounded-panel bg-surface-inset hover:bg-surface-panel border border-border-subtle text-text-primary text-sm font-medium transition-colors">Defend</button>
+                  <button onPointerDown={(e) => { e.preventDefault(); handleRoleChoice('attacker'); }} className="flex-1 h-12 rounded-panel bg-surface-inset hover:bg-surface-panel border border-border-subtle text-text-primary text-sm font-medium transition-colors">Attack</button>
+                  <button onPointerDown={(e) => { e.preventDefault(); handleRoleChoice('defender'); }} className="flex-1 h-12 rounded-panel bg-surface-inset hover:bg-surface-panel border border-border-subtle text-text-primary text-sm font-medium transition-colors">Defend</button>
                 </div>
               </div>
             )}
@@ -185,7 +185,7 @@ export function PreBattleScreen() {
           <StepCard num={5} title="First Turn" description="Roll off — winner goes first." complete={step5Winner !== null}>
             {step5Winner !== null ? (
               <button
-                onClick={resetStep5}
+                onPointerDown={(e) => { e.preventDefault(); resetStep5(); }}
                 className="w-full text-left text-sm text-text-secondary bg-surface-inset rounded-panel px-3 py-2 min-h-[48px] hover:bg-surface-panel border border-border-subtle transition-colors"
               >
                 <span className={activePlayer === 1 ? 'text-accent font-medium' : 'text-danger font-medium'}>
@@ -211,7 +211,7 @@ export function PreBattleScreen() {
       <div className="shrink-0 py-2 border-t border-border-subtle bg-surface-panel flex justify-center">
         <div className="w-full max-w-[640px] px-2">
           <button
-            onClick={canBegin ? beginBattle : undefined}
+            onPointerDown={(e) => { e.preventDefault(); if (canBegin) beginBattle(); }}
             disabled={!canBegin}
             className={`w-full h-12 rounded-panel font-semibold text-base transition-colors
               ${canBegin

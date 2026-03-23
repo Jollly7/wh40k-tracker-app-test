@@ -13,7 +13,7 @@ export function PickerModal({ title, items, onSelect, onClose, selectedLabel, ca
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle shrink-0">
           <h2 className="font-display text-lg font-semibold text-text-primary">{title}</h2>
           <button
-            onClick={onClose}
+            onPointerDown={(e) => { e.preventDefault(); onClose(); }}
             className="text-chrome hover:text-chrome-hover text-2xl leading-none w-12 h-12 flex items-center justify-center rounded-panel transition-colors"
             aria-label="Close"
           >
@@ -46,7 +46,7 @@ export function PickerModal({ title, items, onSelect, onClose, selectedLabel, ca
                   : (
                     <button
                       key={item.label}
-                      onClick={() => onSelect(item.label)}
+                      onPointerDown={(e) => { e.preventDefault(); onSelect(item.label); }}
                       className={`min-h-12 px-4 py-3 rounded-panel bg-surface-inset border border-border-subtle hover:border-border-strong text-text-primary text-sm text-left transition-colors ${item.label === selectedLabel ? 'ring-2 ring-accent bg-accent-muted' : ''}`}
                     >
                       {item.label}
@@ -95,7 +95,7 @@ function CardPreview({ item, onBack, onConfirm }) {
           draggable={false}
         />
         <button
-          onClick={onConfirm}
+          onPointerDown={(e) => { e.preventDefault(); onConfirm(); }}
           className="w-full h-14 rounded-panel bg-accent hover:bg-accent-hover active:bg-accent-hover text-accent-foreground text-base font-semibold transition-colors"
         >
           Confirm — {item.label}
@@ -110,7 +110,7 @@ function ImageCard({ item, onSelect, onPreview, selected, cardAspect }) {
 
   return (
     <button
-      onClick={() => onPreview ? onPreview(item) : onSelect(item.label)}
+      onPointerDown={(e) => { e.preventDefault(); onPreview ? onPreview(item) : onSelect(item.label); }}
       className={`relative rounded-panel overflow-hidden bg-surface-inset hover:ring-2 hover:ring-accent/40 active:ring-accent/70 transition-all text-left w-full ${cardAspect ? '' : 'min-h-48'} ${selected ? 'ring-2 ring-accent' : ''}`}
       style={cardAspect ? { aspectRatio: cardAspect } : undefined}
     >

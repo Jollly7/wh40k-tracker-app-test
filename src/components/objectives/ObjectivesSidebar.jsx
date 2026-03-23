@@ -19,12 +19,6 @@ export function ObjectivesSidebar() {
   const imgSrc = primaryMission ? PRIMARY_MISSION_IMAGES[primaryMission] : null;
   const hasImage = imgSrc && !imgFailed;
 
-  const openLightbox = () => {
-    if (!hasImage) return;
-    if (cardRef.current) setCardRect(cardRef.current.getBoundingClientRect());
-    setLightboxOpen(true);
-  };
-
   // Twist card state
   const [twistImgFailed, setTwistImgFailed] = useState(false);
   const [twistLightboxOpen, setTwistLightboxOpen] = useState(false);
@@ -34,12 +28,6 @@ export function ObjectivesSidebar() {
   const twistImgSrc = twist ? TWIST_IMAGES[twist] : null;
   const hasTwistImage = twistImgSrc && !twistImgFailed;
 
-  const openTwistLightbox = () => {
-    if (!hasTwistImage) return;
-    if (twistCardRef.current) setTwistCardRect(twistCardRef.current.getBoundingClientRect());
-    setTwistLightboxOpen(true);
-  };
-
   return (
     <aside className="w-52 shrink-0 flex flex-col bg-surface-panel border-l border-border-subtle shadow-panel p-3 gap-4 overflow-y-auto">
 
@@ -48,7 +36,8 @@ export function ObjectivesSidebar() {
         <p className="text-xs text-text-muted uppercase tracking-wide mb-2">Mission</p>
         <div
           ref={cardRef}
-          onClick={openLightbox}
+          onPointerDown={() => { if (!hasImage) return; if (cardRef.current) setCardRect(cardRef.current.getBoundingClientRect()); }}
+          onClick={() => { if (!hasImage) return; setLightboxOpen(true); }}
           className={`w-full aspect-[2/3] rounded-panel overflow-hidden border border-dashed
             border-border-subtle flex items-center justify-center text-center
             ${hasImage ? 'cursor-pointer hover:opacity-90 active:opacity-75 transition-opacity' : ''}`}
@@ -101,7 +90,8 @@ export function ObjectivesSidebar() {
         <p className="text-xs text-text-muted uppercase tracking-wide mb-2">Twist</p>
         <div
           ref={twistCardRef}
-          onClick={openTwistLightbox}
+          onPointerDown={() => { if (!hasTwistImage) return; if (twistCardRef.current) setTwistCardRect(twistCardRef.current.getBoundingClientRect()); }}
+          onClick={() => { if (!hasTwistImage) return; setTwistLightboxOpen(true); }}
           className={`w-full aspect-[2/3] rounded-panel overflow-hidden border border-dashed
             border-border-subtle flex items-center justify-center text-center
             ${hasTwistImage ? 'cursor-pointer hover:opacity-90 active:opacity-75 transition-opacity' : ''}`}

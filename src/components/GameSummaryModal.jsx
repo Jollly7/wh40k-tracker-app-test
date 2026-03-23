@@ -262,7 +262,7 @@ export function GameSummaryModal({ firstPlayerNum, secondPlayerNum, onClose }) {
         {/* Footer */}
         <div className="shrink-0 px-6 py-3 border-t border-border-subtle flex justify-end">
           <button
-            onClick={onClose}
+            onPointerDown={(e) => { e.preventDefault(); onClose(); }}
             className="px-6 h-10 rounded-panel bg-surface-inset text-text-primary text-sm
               font-medium hover:bg-surface-raised transition-colors"
           >

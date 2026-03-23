@@ -114,10 +114,11 @@ Each round has two Player Turns (Player 1 then Player 2), each with 5 phases:
 - **Accent colours are role-based**: Attacker = red, Defender = green
 - No decorative Warhammer imagery — keep it functional
 - Tab-based layout: Tracker · Phases · Factions, one tap from anywhere
-- **Touch event handling — all interactive buttons**: Use `onPointerDown` + `e.preventDefault()` for all game-action buttons. This prevents the browser's touch-to-synthetic-click cascade from firing the handler twice on the tablet. `e.preventDefault()` in `onPointerDown` suppresses the downstream `click` event entirely.
-  - **Exception — buttons inside a clickable container** (e.g. a panel that expands on tap): also add `e.stopPropagation()` to prevent the tap bubbling to the parent. Use the split pattern: `onPointerDown={(e) => e.stopPropagation()}` + `onClick={(e) => { e.stopPropagation(); handler(); }}` — this avoids re-render-induced propagation issues when the action triggers a state update.
-  - **Never use bare `onClick`** for CP, VP, phase advance, undo, draw/discard, or timer buttons.
-  - **Exceptions** (leave as `onClick`): file input triggers, `<a>` tags, backdrop/overlay dismiss handlers.
+- **Touch event handling**: All interactions are discrete taps. Two patterns are used depending on scroll-interference risk:
+  - **Standard buttons** (no scroll risk — e.g. CP, VP, phase, close buttons): `onPointerDown={(e) => { e.preventDefault(); handler(); }}`. Suppresses the synthetic click, preventing double-fires on tablet.
+  - **Tappable elements that compete with scroll** (e.g. card thumbnails, keyword/ability chips): use the split pattern — `onPointerDown` captures element rect for animation, `onClick` opens the popup. `onClick` only fires when the finger lifts near where it pressed, providing drag-tolerance. Backdrop dismissal uses `onClick` to match.
+  - **Buttons inside a clickable container**: add `e.stopPropagation()` to prevent bubbling to the parent.
+  - **Exceptions — leave as `onClick`, do not modify**: file input triggers and `<a>` tags. These rely on browser-native behaviour tied to the click event.
 ---
 
 ## What NOT to Do
@@ -203,6 +204,8 @@ These capture decisions and deviations from original spec — read before touchi
 **Last updated:** 23/03/2026
 
 **Status:** v1.8.3 shipped — mobile layout for Tracker and Factions tabs, Setup screen mobile fix.
+
+**Touch event audit completed 23/03/2026** — full codebase sweep; all `onClick` violations on buttons and tappable elements converted to `onPointerDown` + `e.preventDefault()`. Subsequently updated (scroll-swipe fix): card thumbnails and ability/keyword chips now use the split pattern (`onPointerDown` captures rect, `onClick` opens popup); their backdrop dismissals use `onClick` to match. This applies to: `AbilityPopup` backdrop (`UnitAccordion.jsx`), primary mission lightbox backdrop (`ObjectivesSidebar.jsx`), twist lightbox backdrop (`ObjectivesSidebar.jsx`).
 
 ---
 

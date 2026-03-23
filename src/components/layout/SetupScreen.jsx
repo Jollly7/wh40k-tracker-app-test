@@ -92,7 +92,7 @@ function PlayerSetupColumn({ playerNum, accentBorderClass }) {
       <div className="flex flex-col gap-1">
         <span className="text-sm text-text-secondary">Faction</span>
         <button
-          onClick={() => setShowFactionPicker(true)}
+          onPointerDown={(e) => { e.preventDefault(); setShowFactionPicker(true); }}
           className={`h-12 px-3 rounded-panel border text-left text-base transition-colors
             ${faction
               ? 'bg-accent-muted border-accent text-accent font-medium'
@@ -108,7 +108,7 @@ function PlayerSetupColumn({ playerNum, accentBorderClass }) {
         <div className="flex flex-col gap-1">
           <span className="text-sm text-text-secondary">Detachment</span>
           <button
-            onClick={() => setShowDetachmentPicker(true)}
+            onPointerDown={(e) => { e.preventDefault(); setShowDetachmentPicker(true); }}
             className={`h-12 px-3 rounded-panel border text-left text-base transition-colors
               ${detachment
                 ? 'bg-accent-muted border-accent text-accent font-medium'
@@ -174,7 +174,7 @@ export function SetupScreen({ onShowModeModal }) {
     <div className="relative min-h-screen bg-surface-base text-text-primary flex flex-col p-4 gap-6">
       {onShowModeModal && (
         <button
-          onClick={onShowModeModal}
+          onPointerDown={(e) => { e.preventDefault(); onShowModeModal(); }}
           className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-surface-panel border border-border-subtle text-chrome hover:text-text-primary hover:border-border-strong transition-colors"
           aria-label="Switch device mode"
         >
@@ -198,7 +198,7 @@ export function SetupScreen({ onShowModeModal }) {
           <div className="flex flex-col gap-1 flex-1 min-w-48">
             <span className="text-sm text-text-secondary">Primary Mission</span>
             <button
-              onClick={() => setShowMissionPicker(true)}
+              onPointerDown={(e) => { e.preventDefault(); setShowMissionPicker(true); }}
               className={`h-12 px-3 rounded-panel border text-left text-base transition-colors
                 ${primaryMission
                   ? 'bg-accent-muted border-accent text-accent font-medium'
@@ -213,7 +213,7 @@ export function SetupScreen({ onShowModeModal }) {
           <div className="flex flex-col gap-1 flex-1 min-w-48">
             <span className="text-sm text-text-secondary">Twist Card <span className="text-text-muted">(optional)</span></span>
             <button
-              onClick={() => setShowTwistPicker(true)}
+              onPointerDown={(e) => { e.preventDefault(); setShowTwistPicker(true); }}
               className={`h-12 px-3 rounded-panel border text-left text-base transition-colors
                 ${twist
                   ? 'bg-accent-muted border-accent text-accent font-medium'
@@ -260,7 +260,7 @@ export function SetupScreen({ onShowModeModal }) {
 
       {/* Start Game */}
       <button
-        onClick={startGame}
+        onPointerDown={(e) => { e.preventDefault(); if (canStart) startGame(); }}
         disabled={!canStart}
         className={`h-14 rounded-panel text-base font-semibold transition-colors
           ${canStart

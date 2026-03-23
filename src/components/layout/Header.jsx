@@ -81,7 +81,7 @@ export function Header({ onReset, onViewSummary }) {
 
         {/* Pause / Resume button — next to Next Phase */}
         <button
-          onClick={toggleTimerPause}
+          onPointerDown={(e) => { e.preventDefault(); toggleTimerPause(); }}
           disabled={gameOver}
           className={`flex items-center justify-center w-12 h-12 rounded-panel transition-colors shrink-0
             ${gameOver
@@ -154,7 +154,7 @@ export function Header({ onReset, onViewSummary }) {
 
         {/* Undo */}
         <button
-          onClick={undo}
+          onPointerDown={(e) => { e.preventDefault(); undo(); }}
           disabled={!canUndo}
           className="flex items-center justify-center w-12 h-12 rounded-panel text-chrome
             hover:text-chrome-hover hover:bg-surface-inset disabled:text-text-muted disabled:cursor-not-allowed transition-colors"
@@ -165,7 +165,7 @@ export function Header({ onReset, onViewSummary }) {
 
         {/* Action log toggle */}
         <button
-          onClick={() => setLogOpen((o) => !o)}
+          onPointerDown={(e) => { e.preventDefault(); setLogOpen((o) => !o); }}
           className={`flex items-center justify-center w-12 h-12 rounded-panel transition-colors
             ${logOpen ? 'text-text-primary bg-surface-inset' : 'text-chrome hover:text-chrome-hover hover:bg-surface-inset'}`}
           title="Action log"
@@ -176,7 +176,7 @@ export function Header({ onReset, onViewSummary }) {
         {/* View Summary — only when game is over */}
         {gameOver && (
           <button
-            onClick={onViewSummary}
+            onPointerDown={(e) => { e.preventDefault(); onViewSummary(); }}
             className="text-xs text-text-secondary hover:text-text-primary px-3 h-12 rounded-panel whitespace-nowrap transition-colors"
           >
             Summary
@@ -185,7 +185,7 @@ export function Header({ onReset, onViewSummary }) {
 
         {/* Setup / Reset */}
         <button
-          onClick={() => setConfirmReset(true)}
+          onPointerDown={(e) => { e.preventDefault(); setConfirmReset(true); }}
           className="text-xs text-text-muted hover:text-text-secondary px-3 h-12 rounded-panel whitespace-nowrap transition-colors"
         >
           ↩ Setup
@@ -202,13 +202,13 @@ export function Header({ onReset, onViewSummary }) {
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmReset(false)}
+                onPointerDown={(e) => { e.preventDefault(); setConfirmReset(false); }}
                 className="flex-1 h-12 rounded-panel bg-surface-inset text-text-primary text-sm font-medium hover:bg-surface-panel transition-colors"
               >
                 Cancel
               </button>
               <button
-                onClick={() => { setConfirmReset(false); onReset(); }}
+                onPointerDown={(e) => { e.preventDefault(); setConfirmReset(false); onReset(); }}
                 className="flex-1 h-12 rounded-panel bg-surface-inset text-red-500 text-sm font-medium hover:bg-surface-panel transition-colors"
               >
                 Restart

@@ -183,7 +183,7 @@ function DrawModalCard({ cardName, onSelect }) {
 
   return (
     <button
-      onClick={() => onSelect(cardName)}
+      onPointerDown={(e) => { e.preventDefault(); onSelect(cardName); }}
       className="flex flex-col items-center gap-1.5 p-1.5 rounded-panel border border-border-subtle
         bg-surface-panel hover:border-border-strong hover:bg-surface-inset transition-colors group"
     >
@@ -218,7 +218,7 @@ function DrawModal({ deck, onSelect, onCancel }) {
         <div className="flex items-center justify-between px-4 py-2 border-b border-border-subtle shrink-0">
           <span className="text-sm font-semibold text-text-primary">Draw Secondary Card</span>
           <button
-            onClick={onCancel}
+            onPointerDown={(e) => { e.preventDefault(); onCancel(); }}
             className="w-12 h-12 flex items-center justify-center rounded-panel text-chrome
               hover:text-chrome-hover hover:bg-surface-inset transition-colors"
             aria-label="Cancel"
@@ -248,20 +248,16 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [cardRect, setCardRect] = useState(null);
   const imgRef = useRef(null);
+  const capturedRectRef = useRef(null);
 
   const imgSrc = cardName ? SECONDARY_MISSION_IMAGES[cardName] : null;
   const hasImage = imgSrc && !imgError;
-
-  const openLightbox = (e) => {
-    e.stopPropagation();
-    if (imgRef.current) setCardRect(imgRef.current.getBoundingClientRect());
-    setLightboxOpen(true);
-  };
 
   if (!cardName) {
     return (
       <div className="w-[196px] flex flex-col rounded-panel border border-dashed border-border-subtle p-1.5">
         <button
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); onDraw(); }}
           className="flex-1 w-full min-h-[48px] flex items-center justify-center text-xs text-text-muted
             hover:text-text-primary hover:bg-surface-inset transition-colors rounded-panel"
@@ -282,7 +278,8 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
             src={imgSrc}
             alt={cardName}
             onError={() => setImgError(true)}
-            onClick={openLightbox}
+            onPointerDown={(e) => { e.stopPropagation(); if (imgRef.current) capturedRectRef.current = imgRef.current.getBoundingClientRect(); }}
+            onClick={(e) => { e.stopPropagation(); if (capturedRectRef.current) setCardRect(capturedRectRef.current); setLightboxOpen(true); }}
             className="w-full h-14 object-cover object-top rounded-chip cursor-pointer shrink-0
               hover:opacity-90 active:opacity-75 transition-opacity"
           />
@@ -293,6 +290,7 @@ function SecondaryCardSlot({ cardName, onDraw, onDiscard }) {
           </div>
         )}
         <button
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => { e.stopPropagation(); onDiscard(); }}
           className="w-full min-h-[48px] rounded-panel bg-surface-inset border border-border-subtle
             hover:border-border-strong text-xs text-text-muted hover:text-text-primary transition-colors mt-2 shrink-0"
@@ -367,6 +365,7 @@ function PlayerTrackerPanel({ playerNum, isAttacker, isActive, isExpanded, isShr
         {/* Collapse button — expanded inactive only */}
         {isExpanded && (
           <button
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); onCollapse(); }}
             className="absolute top-2 right-2 z-10 w-12 h-12 flex items-center justify-center
               rounded-panel text-text-muted hover:text-text-primary hover:bg-surface-inset transition-colors"

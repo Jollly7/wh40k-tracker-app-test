@@ -15,14 +15,14 @@ function DeviceModeModal({ onSelect }) {
         </h2>
         <div className="flex flex-col gap-3">
           <button
-            onClick={() => onSelect('army')}
+            onPointerDown={(e) => { e.preventDefault(); onSelect('army'); }}
             className="flex flex-col items-start gap-1.5 py-3 px-4 rounded-panel border border-border-subtle bg-surface-inset hover:border-accent text-left transition-colors min-h-[48px]"
           >
             <span className="font-semibold text-text-primary">Army Tracker</span>
             <span className="text-sm text-chrome">Track unit stats and reminders</span>
           </button>
           <button
-            onClick={() => onSelect('game')}
+            onPointerDown={(e) => { e.preventDefault(); onSelect('game'); }}
             className="flex flex-col items-start gap-1.5 py-3 px-4 rounded-panel border border-border-subtle bg-surface-inset hover:border-accent text-left transition-colors min-h-[48px]"
           >
             <span className="font-semibold text-text-primary">Battle Tracker</span>

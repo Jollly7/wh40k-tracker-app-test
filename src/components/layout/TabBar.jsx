@@ -15,7 +15,7 @@ export function TabBar({ activeTab, setActiveTab, onShowModeModal }) {
         return (
           <button
             key={id}
-            onClick={() => setActiveTab(id)}
+            onPointerDown={(e) => { e.preventDefault(); setActiveTab(id); }}
             className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors
               ${isActive
                 ? 'text-accent border-t-2 border-accent -mt-px'
@@ -28,7 +28,7 @@ export function TabBar({ activeTab, setActiveTab, onShowModeModal }) {
         );
       })}
       <button
-        onClick={onShowModeModal}
+        onPointerDown={(e) => { e.preventDefault(); onShowModeModal(); }}
         className="w-14 shrink-0 flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-chrome hover:text-chrome-hover transition-colors"
         title="Switch device mode"
       >

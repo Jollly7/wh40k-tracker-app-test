@@ -257,7 +257,7 @@ export function ArmyTab({ attackerNum }) {
         {/* Player toggle */}
         <div className="shrink-0 flex bg-surface-panel border-b border-border-subtle">
           <button
-            onClick={() => setMobileActivePlayer('attacker')}
+            onPointerDown={(e) => { e.preventDefault(); setMobileActivePlayer('attacker'); }}
             className={`flex-1 h-12 px-3 text-sm font-medium truncate transition-colors ${
               mobileActivePlayer === 'attacker'
                 ? 'text-danger border-b-2 border-danger -mb-px'
@@ -267,7 +267,7 @@ export function ArmyTab({ attackerNum }) {
             P1 · {attackerArmyName}
           </button>
           <button
-            onClick={() => setMobileActivePlayer('defender')}
+            onPointerDown={(e) => { e.preventDefault(); setMobileActivePlayer('defender'); }}
             className={`flex-1 h-12 px-3 text-sm font-medium truncate transition-colors ${
               mobileActivePlayer === 'defender'
                 ? 'text-success border-b-2 border-success -mb-px'

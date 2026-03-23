@@ -19,7 +19,7 @@ function KeywordTokens({ keywords, rules, onKeywordClick }) {
           return (
             <button
               key={i}
-              onPointerDown={(e) => { e.preventDefault(); onKeywordClick({ name: token, description: desc }); }}
+              onClick={(e) => { e.stopPropagation(); onKeywordClick({ name: token, description: desc }); }}
               className="text-[10px] rounded px-1 py-0.5 border border-border-subtle text-text-muted hover:text-accent hover:border-accent transition-colors"
             >
               {token}
@@ -96,17 +96,17 @@ function AbilityPopup({ ability, onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
-      onPointerDown={onClose}
+      onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/50" />
       <div
         className="relative z-10 bg-surface-panel border border-border-subtle rounded-lg shadow-xl p-4 max-w-md w-[90vw] max-h-[80vh] overflow-y-auto"
-        onPointerDown={e => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 mb-2">
           <h3 className="text-sm font-semibold text-text-primary leading-snug">{ability.name}</h3>
           <button
-            onPointerDown={onClose}
+            onPointerDown={(e) => { e.preventDefault(); onClose(); }}
             className="shrink-0 text-text-muted hover:text-text-primary text-base leading-none"
             aria-label="Close"
           >
@@ -130,7 +130,7 @@ function CompositionAccordion({ composition, leaderComposition, leaderName }) {
   return (
     <div>
       <button
-        onClick={() => setOpen(v => !v)}
+        onPointerDown={(e) => { e.preventDefault(); setOpen(v => !v); }}
         className="flex items-center gap-1 text-xs font-semibold tracking-widest uppercase border-l-2 border-violet-400 pl-2 text-violet-300 mb-1 w-full text-left"
       >
         <ChevronRight size={12} className={`shrink-0 transition-transform ${open ? 'rotate-90' : ''}`} />
@@ -331,7 +331,7 @@ export function UnitAccordion({ unit, displayName, leader, isCharacter, validBod
                 {combinedAbilities.map((ability, i) => (
                   <button
                     key={i}
-                    onPointerDown={() => setActiveAbility(ability)}
+                    onClick={(e) => { e.stopPropagation(); setActiveAbility(ability); }}
                     className={`text-[10px] rounded px-1 py-0.5 transition-colors ${
                       ability._isLeader
                         ? 'border border-amber-400 text-amber-400 hover:bg-amber-400/10'
