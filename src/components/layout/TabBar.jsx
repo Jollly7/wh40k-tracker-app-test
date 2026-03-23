@@ -1,4 +1,4 @@
-import { BarChart2, List, Users, Swords } from 'lucide-react';
+import { BarChart2, List, Users, Swords, SlidersHorizontal } from 'lucide-react';
 
 const TABS = [
   { id: 'tracker',  label: 'Tracker',  Icon: BarChart2 },
@@ -7,7 +7,7 @@ const TABS = [
   { id: 'army',     label: 'Army',     Icon: Swords },
 ];
 
-export function TabBar({ activeTab, setActiveTab }) {
+export function TabBar({ activeTab, setActiveTab, onShowModeModal }) {
   return (
     <nav className="h-14 flex bg-surface-panel border-t border-border-subtle shrink-0">
       {TABS.map(({ id, label, Icon }) => {
@@ -27,6 +27,13 @@ export function TabBar({ activeTab, setActiveTab }) {
           </button>
         );
       })}
+      <button
+        onClick={onShowModeModal}
+        className="w-14 shrink-0 flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-chrome hover:text-chrome-hover transition-colors"
+        title="Switch device mode"
+      >
+        <SlidersHorizontal size={18} />
+      </button>
     </nav>
   );
 }

@@ -98,6 +98,8 @@ export function ArmyTab({ attackerNum }) {
   const defenderNum = attackerNum === 1 ? 2 : 1;
   const attackerName = useGameStore((s) => s.players[attackerNum].name);
   const defenderName = useGameStore((s) => s.players[defenderNum].name);
+  const attackerFaction = useGameStore((s) => s.players[attackerNum].faction);
+  const defenderFaction = useGameStore((s) => s.players[defenderNum].faction);
 
   const [rosters, setRosters] = useState(() => loadImportedRosters());
   const [selection, setSelection] = useState(() => {
@@ -108,6 +110,7 @@ export function ArmyTab({ attackerNum }) {
   const [syncing, setSyncing] = useState(false);
   const [offline, setOffline] = useState(false);
   const [syncError, setSyncError] = useState(null);
+  const [mobileActivePlayer, setMobileActivePlayer] = useState('attacker');
 
   // On mount: fetch rosters from KV; fall back to localStorage on failure
   useEffect(() => {
@@ -187,51 +190,120 @@ export function ArmyTab({ attackerNum }) {
     return rosters.find(r => r.label === label) ?? null;
   }
 
+  // Army name for mobile toggle: roster label > faction from store > player name
+  function getArmyName(selectionKey, faction, playerName) {
+    const label = selection[selectionKey];
+    if (label) return label;
+    if (faction) return faction;
+    return playerName;
+  }
+
   const attackerRoster = getRoster(selection.attacker);
   const defenderRoster = getRoster(selection.defender);
+  const attackerArmyName = getArmyName('attacker', attackerFaction, attackerName);
+  const defenderArmyName = getArmyName('defender', defenderFaction, defenderName);
+
+  const attackerControls = (
+    <RosterControls
+      rosters={rosters}
+      selectedLabel={selection.attacker}
+      onSelect={(label) => handleSelect('attacker', label)}
+      onImport={(r) => handleImport('attacker', r)}
+      syncing={syncing}
+      offline={offline}
+      syncError={syncError}
+    />
+  );
+  const defenderControls = (
+    <RosterControls
+      rosters={rosters}
+      selectedLabel={selection.defender}
+      onSelect={(label) => handleSelect('defender', label)}
+      onImport={(r) => handleImport('defender', r)}
+      syncing={syncing}
+      offline={offline}
+      syncError={syncError}
+    />
+  );
 
   return (
-    <div className="h-full flex overflow-hidden">
-      <ArmyPanel
-        armyData={attackerRoster}
-        accentClass="text-danger"
-        label={attackerName}
-        isLeft
-        pKey="p1"
-        attachments={attachments}
-        setAttachments={updateAttachments}
-        importButton={
-          <RosterControls
-            rosters={rosters}
-            selectedLabel={selection.attacker}
-            onSelect={(label) => handleSelect('attacker', label)}
-            onImport={(r) => handleImport('attacker', r)}
-            syncing={syncing}
-            offline={offline}
-            syncError={syncError}
+    <div className="h-full">
+      {/* ── Desktop layout — two-column side by side (>768px) ── */}
+      <div className="hidden md:flex h-full overflow-hidden">
+        <ArmyPanel
+          armyData={attackerRoster}
+          accentClass="text-danger"
+          label={attackerName}
+          isLeft
+          pKey="p1"
+          attachments={attachments}
+          setAttachments={updateAttachments}
+          importButton={attackerControls}
+        />
+        <ArmyPanel
+          armyData={defenderRoster}
+          accentClass="text-success"
+          label={defenderName}
+          isLeft={false}
+          pKey="p2"
+          attachments={attachments}
+          setAttachments={updateAttachments}
+          importButton={defenderControls}
+        />
+      </div>
+
+      {/* ── Mobile layout — single column with player toggle (≤768px) ── */}
+      <div className="flex flex-col md:hidden h-full overflow-hidden">
+        {/* Player toggle */}
+        <div className="shrink-0 flex bg-surface-panel border-b border-border-subtle">
+          <button
+            onClick={() => setMobileActivePlayer('attacker')}
+            className={`flex-1 h-12 px-3 text-sm font-medium truncate transition-colors ${
+              mobileActivePlayer === 'attacker'
+                ? 'text-danger border-b-2 border-danger -mb-px'
+                : 'text-chrome hover:text-chrome-hover'
+            }`}
+          >
+            P1 · {attackerArmyName}
+          </button>
+          <button
+            onClick={() => setMobileActivePlayer('defender')}
+            className={`flex-1 h-12 px-3 text-sm font-medium truncate transition-colors ${
+              mobileActivePlayer === 'defender'
+                ? 'text-success border-b-2 border-success -mb-px'
+                : 'text-chrome hover:text-chrome-hover'
+            }`}
+          >
+            P2 · {defenderArmyName}
+          </button>
+        </div>
+
+        {/* Both panels always mounted — toggled with CSS to preserve accordion state */}
+        <div className={mobileActivePlayer === 'attacker' ? 'contents' : 'hidden'}>
+          <ArmyPanel
+            armyData={attackerRoster}
+            accentClass="text-danger"
+            label={attackerName}
+            isLeft={false}
+            pKey="p1"
+            attachments={attachments}
+            setAttachments={updateAttachments}
+            importButton={attackerControls}
           />
-        }
-      />
-      <ArmyPanel
-        armyData={defenderRoster}
-        accentClass="text-success"
-        label={defenderName}
-        isLeft={false}
-        pKey="p2"
-        attachments={attachments}
-        setAttachments={updateAttachments}
-        importButton={
-          <RosterControls
-            rosters={rosters}
-            selectedLabel={selection.defender}
-            onSelect={(label) => handleSelect('defender', label)}
-            onImport={(r) => handleImport('defender', r)}
-            syncing={syncing}
-            offline={offline}
-            syncError={syncError}
+        </div>
+        <div className={mobileActivePlayer === 'defender' ? 'contents' : 'hidden'}>
+          <ArmyPanel
+            armyData={defenderRoster}
+            accentClass="text-success"
+            label={defenderName}
+            isLeft={false}
+            pKey="p2"
+            attachments={attachments}
+            setAttachments={updateAttachments}
+            importButton={defenderControls}
           />
-        }
-      />
+        </div>
+      </div>
     </div>
   );
 }

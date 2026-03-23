@@ -9,7 +9,7 @@ import { FactionsTab } from '../factions/FactionsTab';
 import { ArmyTab } from '../army/ArmyTab';
 import { GameSummaryModal } from '../GameSummaryModal';
 
-export function GameScreen() {
+export function GameScreen({ initialTab, onShowModeModal }) {
   const resetGame = useGameStore((s) => s.resetGame);
   const gameOver  = useGameStore((s) => s.gameOver);
   const p1Role      = useGameStore((s) => s.players[1].role);
@@ -18,7 +18,7 @@ export function GameScreen() {
   const attackerNum     = p1Role === 'attacker' ? 1 : 2;
   const secondPlayerNum = firstPlayer === 1 ? 2 : 1;
 
-  const [activeTab, setActiveTab]     = useState('tracker');
+  const [activeTab, setActiveTab]     = useState(initialTab ?? 'tracker');
   const [showSummary, setShowSummary] = useState(false);
 
   // Auto-open modal when game ends
@@ -67,10 +67,10 @@ export function GameScreen() {
             )}
           </div>
 
-          <TabBar activeTab={activeTab} setActiveTab={setActiveTab} />
+          <TabBar activeTab={activeTab} setActiveTab={setActiveTab} onShowModeModal={onShowModeModal} />
         </div>
 
-        <ObjectivesSidebar />
+        <div className="hidden md:block"><ObjectivesSidebar /></div>
       </div>
 
       {showSummary && (

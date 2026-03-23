@@ -189,7 +189,7 @@ These capture decisions and deviations from original spec — read before touchi
 | v1.6 | Army list reference tab (UnitAccordion, weapon tables, abilities) | ✅ Done |
 | v1.7 | .json roster import (NewRecruit, client-side parse, localStorage) | ✅ Done |
 | v1.8.1 | Cloudflare migration + KV roster sync | ✅ Done |
-| v1.8.2 | Mobile layout (responsive Army tab, portrait, player toggle) | ⬜ Planned |
+| v1.8.2 | Mobile layout (responsive Army tab, portrait, player toggle) | ✅ Done |
 
 **Cross-cutting features shipped:** undo (20-snapshot stack), action log, mission card images + lightbox, localStorage persistence, secondary card draw/discard/lightbox.
 
@@ -333,3 +333,37 @@ Pure transform function: `parseRosterJson(json)` → internal roster shape. No R
 - No authentication — KV is effectively public to anyone with the URL; acceptable for a personal app
 - Do not remove localStorage persistence — it remains the offline fallback
 - Pages Function must set CORS headers: `Access-Control-Allow-Origin: *`
+
+---
+
+### v1.8.2 — Mobile Layout + Device Mode Modal
+
+#### Device Mode Modal
+- `wh40k-device-mode` localStorage key stores `'army'` or `'game'`; absent on first load
+- `DeviceModeModal` component lives in `App.jsx`; shown as `fixed inset-0 z-50` overlay when key is absent or when mode switcher is tapped
+- Two choices: **Army List** ("View army rosters and phase reminders") and **Game Setup** ("Run a full game with CP/VP tracking")
+- No close/skip — a choice must be made; selecting saves to localStorage and dismisses
+- Re-tapping the mode switcher re-shows the modal without clearing game state
+
+#### Mode behaviour
+- `'army'` mode: `App.jsx` renders `<GameScreen initialTab="army">` regardless of `gameStarted`/`battleBegun`, bypassing SetupScreen and PreBattleScreen
+- `'game'` mode: normal app flow unchanged
+
+#### Mode switcher in tab bar
+- `SlidersHorizontal` (Lucide) icon button added to far right of `TabBar.jsx` (`w-14 shrink-0`)
+- `TabBar` accepts `onShowModeModal` prop (threaded via `GameScreen` from `App.jsx`)
+- `GameScreen` accepts `initialTab` and `onShowModeModal` props; passes latter to TabBar
+- Visible on all screen sizes
+
+#### Army tab mobile layout (≤768px, Tailwind `md:` breakpoint)
+- `ArmyTab.jsx` returns a single `div.h-full` wrapper containing two layout branches:
+  - `hidden md:flex` — existing two-column desktop layout, unchanged
+  - `flex flex-col md:hidden` — new single-column mobile layout
+- Mobile layout: player toggle bar (`shrink-0 h-12`) at top, one `ArmyPanel` below filling remaining height
+- Player toggle: two `flex-1 h-12` buttons: `P1 · [army name]` and `P2 · [army name]`; active uses role accent (`text-danger` / `text-success`) with `border-b-2`; inactive is `text-chrome`
+- Army name resolution: roster label if loaded → faction from store → player name
+- `mobileActivePlayer` state (`'attacker'` | `'defender'`) controls which panel renders; defaults to `'attacker'`
+- `ArmyPanel` rendered with `isLeft={false}` on mobile (no right border on full-width panel)
+- `attackerFaction` and `defenderFaction` read from Zustand store for army name fallback
+- Roster import controls (via `importButton` prop) remain inside `ArmyPanel` header — available on mobile per-panel
+- `RosterControls` and KV sync behaviour unchanged from v1.8.1
