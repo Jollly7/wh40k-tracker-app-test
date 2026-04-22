@@ -181,7 +181,7 @@ export function UnitAccordion({ unit, displayName, leader, isCharacter, validBod
 
   const isMerged = !!leader;
   const effectiveName = displayName ?? unit.name;
-  const { stats, ranged, melee, abilities, keywords, composition } = unit;
+  const { stats, ranged, melee, abilities, unitRules, keywords, composition } = unit;
   const sv = stats.invuln ? `${stats.SV} (${stats.invuln})` : stats.SV;
 
   const hasValidBodyguards = isCharacter && validBodyguards && validBodyguards.length > 0;
@@ -194,8 +194,16 @@ export function UnitAccordion({ unit, displayName, leader, isCharacter, validBod
     ? [...(melee ?? []), ...(leader.unit.melee ?? []).map(w => ({ ...w, _isLeader: true }))]
     : (melee ?? []);
   const combinedAbilities = isMerged
-    ? [...(abilities ?? []), ...(leader.unit.abilities ?? []).map(a => ({ ...a, _isLeader: true }))]
-    : (abilities ?? []);
+    ? [
+        ...(abilities ?? []),
+        ...(unitRules ?? []).map(r => ({ ...r, _isRule: true })),
+        ...(leader.unit.abilities ?? []).map(a => ({ ...a, _isLeader: true })),
+        ...(leader.unit.unitRules ?? []).map(r => ({ ...r, _isRule: true, _isLeader: true })),
+      ]
+    : [
+        ...(abilities ?? []),
+        ...(unitRules ?? []).map(r => ({ ...r, _isRule: true })),
+      ];
   const bgKeywords = keywords ?? [];
   const leaderKeywords = isMerged ? (leader.unit.keywords ?? []) : [];
 
@@ -326,15 +334,19 @@ export function UnitAccordion({ unit, displayName, leader, isCharacter, validBod
 
           {combinedAbilities.length > 0 && (
             <div>
-              <div className="text-xs font-semibold tracking-widest uppercase border-l-2 border-emerald-400 pl-2 text-emerald-300 mb-1">Abilities</div>
+              <div className="text-xs font-semibold tracking-widest uppercase border-l-2 border-emerald-400 pl-2 text-emerald-300 mb-1">Abilities / Rules</div>
               <div className="flex flex-wrap gap-1">
                 {combinedAbilities.map((ability, i) => (
                   <button
                     key={i}
                     onClick={(e) => { e.stopPropagation(); setActiveAbility(ability); }}
                     className={`text-[10px] rounded px-1 py-0.5 transition-colors ${
-                      ability._isLeader
+                      ability._isLeader && ability._isRule
+                        ? 'border border-amber-400/60 text-amber-300/80 hover:bg-amber-400/10'
+                        : ability._isLeader
                         ? 'border border-amber-400 text-amber-400 hover:bg-amber-400/10'
+                        : ability._isRule
+                        ? 'border border-teal-500 text-teal-300 hover:bg-teal-500/10'
                         : 'text-text-muted border border-border-subtle hover:text-accent hover:border-accent'
                     }`}
                   >

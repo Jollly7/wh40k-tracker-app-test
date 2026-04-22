@@ -193,6 +193,7 @@ These capture decisions and deviations from original spec — read before touchi
 | v1.8.1 | Cloudflare migration + KV roster sync | ✅ Done |
 | v1.8.2 | Mobile layout (responsive Army tab, portrait, player toggle) | ✅ Done |
 | v1.8.3 | Mobile layout — Tracker, Factions, Setup screen fixes | ✅ Done |
+| v1.8.4 | Unit rules in Abilities / Rules section (UnitAccordion + parser) | ✅ Done |
 
 **Cross-cutting features shipped:** undo (20-snapshot stack), action log, mission card images + lightbox, localStorage persistence, secondary card draw/discard/lightbox.
 
@@ -202,9 +203,9 @@ These capture decisions and deviations from original spec — read before touchi
 
 ## Current Progress
 
-**Last updated:** 23/03/2026
+**Last updated:** 22/04/2026
 
-**Status:** v1.8.3 shipped — mobile layout for Tracker and Factions tabs, Setup screen mobile fix.
+**Status:** v1.8.4 shipped — unit `selection.rules[]` (e.g. Deadly Demise, For The Greater Good) now parsed into `unit.unitRules[]` and shown as teal chips in "Abilities / Rules" section of UnitAccordion.
 
 **Touch event audit completed 23/03/2026** — full codebase sweep; all `onClick` violations on buttons and tappable elements converted to `onPointerDown` + `e.preventDefault()`. Subsequently updated (scroll-swipe fix): card thumbnails and ability/keyword chips now use the split pattern (`onPointerDown` captures rect, `onClick` opens popup); their backdrop dismissals use `onClick` to match. This applies to: `AbilityPopup` backdrop (`UnitAccordion.jsx`), primary mission lightbox backdrop (`ObjectivesSidebar.jsx`), twist lightbox backdrop (`ObjectivesSidebar.jsx`).
 
@@ -264,7 +265,8 @@ Pure transform function: `parseRosterJson(json)` → internal roster shape. No R
 - Unit stats from `profiles` entry with `typeName === "Unit"`, characteristics by name, `$text` values; T/W/OC coerced to int
 - Invuln: `Abilities` profile whose `name` matches `/^\d+\+\+$/`
 - Ranged/melee weapons: recursive walk of `selections`, collect profiles by `typeName`, de-dupe by name, sum `count` across duplicates
-- Abilities: all `Abilities` profiles (recursive), deduped, excluding invuln saves; `Description` characteristic stored
+- Abilities: all `Abilities` profiles (recursive), deduped, excluding invuln saves; `Description` characteristic stored → `unit.abilities[]`
+- Unit rules: `selection.rules[]` (e.g. "Deadly Demise D3", "For The Greater Good"), deduped by name → `unit.unitRules[]`; distinct from the global `rules` keyword dict
 - Keywords: unit's own `categories`, names sorted alphabetically
 - Unit composition (see below)
 
@@ -295,6 +297,7 @@ Pure transform function: `parseRosterJson(json)` → internal roster shape. No R
 - `CompositionAccordion` sub-component: nested accordion (collapsed by default) rendered after Keywords
 - Shows each model type as `Nx ModelName: equip1, 2x equip2, Parent (sub-weapon), ...`
 - Only rendered when `unit.composition` is non-null and non-empty
+- "Abilities / Rules" section merges `unit.abilities` and `unit.unitRules` into `combinedAbilities`; rule entries flagged `_isRule: true` render with teal chip styling; leader-merged unit rules flagged `_isRule: true, _isLeader: true` use dimmed amber; same `AbilityPopup` handles all
 
 ---
 

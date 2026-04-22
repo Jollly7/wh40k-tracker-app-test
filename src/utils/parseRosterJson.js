@@ -234,6 +234,18 @@ function parseUnit(sel) {
     abilities.push({ name: n, description: desc });
   }
 
+  // Unit-level rules from selection.rules[] (e.g. "Deadly Demise D3", "For The Greater Good")
+  const seenRuleNames = new Set();
+  const unitRules = [];
+  for (const rule of toArray(sel.rules)) {
+    const n = (rule.name ?? '').trim();
+    const desc = (rule.description ?? '').trim();
+    if (n && !seenRuleNames.has(n)) {
+      seenRuleNames.add(n);
+      unitRules.push({ name: n, description: desc });
+    }
+  }
+
   // Keywords: from the unit's own categories, sorted alphabetically
   const keywords = getCategories(sel)
     .map(c => c.name ?? '')
@@ -266,7 +278,7 @@ function parseUnit(sel) {
     }
   }
 
-  return { name, stats, ranged, melee, abilities, keywords, composition, isCharacter, leaderOf };
+  return { name, stats, ranged, melee, abilities, unitRules, keywords, composition, isCharacter, leaderOf };
 }
 
 /**
