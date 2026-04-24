@@ -173,7 +173,7 @@ function CompositionAccordion({ composition, leaderComposition, leaderName }) {
  * Standard mode: unit + displayName + optional character attach controls
  * Merged mode:   unit = bodyguard, leader = { unit, displayName, onDetach }
  */
-export function UnitAccordion({ unit, displayName, leader, isCharacter, validBodyguards, onAttach, rules }) {
+export function UnitAccordion({ unit, displayName, leader, isCharacter, validBodyguards, onAttach, rules, isDead, onToggleDead }) {
   const [open, setOpen] = useState(false);
   const [activeAbility, setActiveAbility] = useState(null);
   const [activeKeyword, setActiveKeyword] = useState(null);
@@ -184,6 +184,9 @@ export function UnitAccordion({ unit, displayName, leader, isCharacter, validBod
   const { stats, ranged, melee, abilities, unitRules, keywords, composition } = unit;
   const sv = stats.invuln ? `${stats.SV} (${stats.invuln})` : stats.SV;
   const totalModels = composition ? composition.reduce((sum, m) => sum + m.count, 0) : null;
+  const displayPts = isMerged
+    ? (unit.pts ?? 0) + (leader.unit.pts ?? 0)
+    : (unit.pts ?? 0);
 
   const hasValidBodyguards = isCharacter && validBodyguards && validBodyguards.length > 0;
 
@@ -216,36 +219,53 @@ export function UnitAccordion({ unit, displayName, leader, isCharacter, validBod
       {/* Collapsed row */}
       <div
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-2 px-3 py-2 min-h-[48px] text-left hover:bg-surface-panel transition-colors cursor-pointer"
+        className={`w-full flex items-start gap-2 px-3 py-2 min-h-[48px] text-left hover:bg-surface-panel transition-colors cursor-pointer${isDead ? ' opacity-50' : ''}`}
       >
         <ChevronRight
           size={14}
-          className={`shrink-0 text-text-muted transition-transform ${open ? 'rotate-90' : ''}`}
+          className={`shrink-0 text-text-muted transition-transform mt-[3px] ${open ? 'rotate-90' : ''}`}
         />
 
-        {/* Title + detach button */}
-        <div className="flex-1 flex items-center gap-1 min-w-0">
-          <span className="text-sm font-medium text-text-primary truncate">
-            {isMerged ? (
-              <>
-                {effectiveName}{' '}
-                <span className="text-amber-400 font-semibold">+ {leader.displayName}</span>
-              </>
-            ) : effectiveName}
-          </span>
-          {totalModels > 1 && (
-            <span className="text-xs text-text-muted shrink-0">x{totalModels}</span>
-          )}
-          {isMerged && (
-            <div
-              className="shrink-0 flex items-center justify-center min-w-[48px] min-h-[48px] text-text-muted hover:text-danger transition-colors cursor-pointer"
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => { e.stopPropagation(); leader.onDetach(); }}
-              role="button"
-              aria-label="Detach leader"
-            >
-              <X size={14} />
-            </div>
+        {/* Title column */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {isMerged ? (
+            <>
+              {/* Line 1: leader name */}
+              <span className="text-sm font-semibold text-amber-400 truncate">{leader.displayName}</span>
+              {/* Line 2: bodyguard name + count + detach */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-medium text-text-primary truncate">
+                  {effectiveName}{totalModels > 1 && <span className="text-xs text-text-muted"> x{totalModels}</span>}
+                </span>
+                <div
+                  className="shrink-0 flex items-center justify-center min-w-[48px] text-text-muted hover:text-danger transition-colors cursor-pointer"
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.stopPropagation(); leader.onDetach(); }}
+                  role="button"
+                  aria-label="Detach leader"
+                >
+                  <X size={14} />
+                </div>
+              </div>
+              {/* Line 3: pts */}
+              {displayPts > 0 && (
+                <span className="text-xs text-text-secondary">{displayPts} pts</span>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Line 1: unit name + count */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm font-medium text-text-primary truncate">{effectiveName}</span>
+                {totalModels > 1 && (
+                  <span className="text-xs text-text-muted shrink-0">x{totalModels}</span>
+                )}
+              </div>
+              {/* Line 2: pts */}
+              {displayPts > 0 && (
+                <span className="text-xs text-text-secondary">{displayPts} pts</span>
+              )}
+            </>
           )}
         </div>
 
@@ -386,6 +406,15 @@ export function UnitAccordion({ unit, displayName, leader, isCharacter, validBod
               leaderName={isMerged ? leader.displayName : null}
             />
           )}
+
+          <div className="pt-2 border-t border-border-subtle">
+            <button
+              onClick={() => { onToggleDead?.(); setOpen(false); }}
+              className="text-xs px-3 py-1 rounded border border-border-subtle text-text-secondary hover:border-danger hover:text-danger transition-colors"
+            >
+              {isDead ? 'Mark as Active' : 'Mark as Destroyed'}
+            </button>
+          </div>
         </div>
       )}
 

@@ -187,6 +187,14 @@ function getComposition(unitSel) {
   return [{ name: unitSel.name, count: 1, equipment }];
 }
 
+/** Recursively sum pts costs across a selection and all its descendants. */
+function sumPts(selection) {
+  const costsArr = Array.isArray(selection.costs) ? selection.costs : toArray(selection.costs?.cost);
+  const own = costsArr.find(c => c.name === 'pts')?.value ?? 0;
+  const children = getSelections(selection).reduce((acc, child) => acc + sumPts(child), 0);
+  return own + children;
+}
+
 /** Parse a single unit selection into the internal unit shape. */
 function parseUnit(sel) {
   const name = sel.name ?? 'Unknown Unit';
@@ -254,6 +262,9 @@ function parseUnit(sel) {
 
   const composition = getComposition(sel);
 
+  // Points: recursive sum across unit and all descendants (includes enhancement upgrades)
+  const pts = Math.round(sumPts(sel)) || 0;
+
   // isCharacter: true if "Character" appears in the unit's categories
   const isCharacter = keywords.includes('Character');
 
@@ -278,7 +289,7 @@ function parseUnit(sel) {
     }
   }
 
-  return { name, stats, ranged, melee, abilities, unitRules, keywords, composition, isCharacter, leaderOf };
+  return { name, stats, ranged, melee, abilities, unitRules, keywords, composition, isCharacter, leaderOf, pts };
 }
 
 /**

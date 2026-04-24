@@ -118,6 +118,7 @@ Each round has two Player Turns (Player 1 then Player 2), each with 5 phases:
   - **Standard buttons** (no scroll risk — e.g. CP, VP, phase, close buttons): `onPointerDown={(e) => { e.preventDefault(); handler(); }}`. Suppresses the synthetic click, preventing double-fires on tablet.
   - **Tappable elements that compete with scroll** (e.g. card thumbnails, keyword/ability chips): use the split pattern — `onPointerDown` captures element rect for animation, `onClick` opens the popup. `onClick` only fires when the finger lifts near where it pressed, providing drag-tolerance. Backdrop dismissal uses `onClick` to match.
   - **Buttons that open modals/overlays**: use `onClick` only — NOT `onPointerDown`. The modal mounts while the finger is still down; the subsequent `click` event then lands inside the newly-opened overlay, triggering an unintended selection (tap-through). `onClick` fires on lift, before the modal exists. Double-fire is not a risk because the trigger button is immediately obscured by the modal. Examples: faction picker trigger, detachment picker trigger, mission/twist picker triggers.
+  - **Buttons that cause immediate layout shifts** (e.g. re-sorting a list, filtering, moving an item): use `onClick` only — same tap-through mechanism as modals. If the action fires on `pointerDown`, the layout shifts before the finger lifts and the `click` lands on whatever element is now at those coordinates. `onClick` fires on lift first; React batches the state update and applies the layout change after the handler returns. Example: "Mark as Destroyed / Mark as Active" toggle in UnitAccordion.
   - **Buttons inside a clickable container**: add `e.stopPropagation()` to prevent bubbling to the parent.
   - **Exceptions — leave as `onClick`, do not modify**: file input triggers and `<a>` tags. These rely on browser-native behaviour tied to the click event.
 ---
@@ -187,6 +188,15 @@ These capture decisions and deviations from original spec — read before touchi
 #### Roster Import
 - **Roster import**: Players import army lists as .json files exported directly from NewRecruit. Parsed client-side by `src/utils/parseRosterJson.js`. Synced to Cloudflare KV (source of truth) via `POST /api/rosters`; localStorage (`wh40k-imported-rosters`) retained as offline fallback. Army tab fetches from `GET /api/rosters` on mount and merges with localStorage. Player selections persisted under `wh40k-army-selection` as `{ p1: label | null, p2: label | null }`. Re-importing a file with the same label replaces the existing entry. No committed roster files exist in the codebase.
 
+#### Dead Units
+- Dead unit state stored in localStorage under `wh40k-dead-units`
+- Shape: `{ [rosterLabel]: number[] }` on disk; loaded as `Set<number>` on mount
+- Managed in `ArmyPanel.jsx` as local `useState`; not in Zustand store
+- Dead units render with `opacity-50` on collapsed row; toggle button in expanded section
+- Unit list sorted in `ArmyPanel.jsx`: alive units first (original order), dead units last
+- `aliveTotal` pts excludes dead units; shown in panel header as `{aliveTotal}/{grandTotal} pts`
+- Dead toggle button uses `onClick` (not `onPointerDown`) — the list re-sorts on state update, which would cause tap-through if the action fired on press; `onClick` fires on lift before React applies the re-render; also calls `setOpen(false)` to auto-collapse the accordion
+
 ---
 
 ## Build History
@@ -216,6 +226,7 @@ These capture decisions and deviations from original spec — read before touchi
 | v1.8.3 | Mobile layout — Tracker, Factions, Setup screen fixes | ✅ Done |
 | v1.8.3.3 | Unit rules in Abilities / Rules section (UnitAccordion + parser) | ✅ Done |
 | v1.8.3.4 | Log button tap-through fix + model count in UnitAccordion header | ✅ Done |
+| v1.8.4 | UnitAccordion: stacked header layout, pts per unit + army total, dead unit marker | ✅ Done |
 
 **Cross-cutting features shipped:** undo (20-snapshot stack), action log, mission card images + lightbox, localStorage persistence, secondary card draw/discard/lightbox.
 
@@ -225,13 +236,9 @@ These capture decisions and deviations from original spec — read before touchi
 
 ## Current Progress
 
-**Last updated:** 23/04/2026
+**Last updated:** 24/04/2026
 
-**Status:** v1.8.3.4 remains the latest shipped version. CLAUDE.md audited and updated: `wh40k-army-selection` key shape corrected to `{ p1, p2 }` throughout, roster storage references updated to reflect KV as source of truth (v1.8.1), Key Implementation Notes reorganised with `####` subheadings, Leader Attachment (v1.7.2–v1.7.3) added to Build History and spec sections.
-
-**v1.8.3.4 — two fixes:**
-1. **Log button tap-through fix** (`Header.jsx`): log toggle button changed from `onPointerDown` to `onClick`. The `fixed inset-0 z-10` backdrop was intercepting the post-press click and immediately closing the dropdown. Backdrop dismissal was already correct (`onClick`).
-2. **Model count in UnitAccordion header** (`UnitAccordion.jsx`): total model count shown inline after unit name (e.g. `Strike Team x10`) when count > 1. Derived by summing `composition[].count`; hidden for single-model units and null composition.
+**Status:** v1.8.4 shipped. UnitAccordion header reworked to stacked layout (name/s then pts) for both standalone and merged leader+bodyguard units — count moved to bodyguard line, leader on top. Parser updated to sum pts recursively (includes enhancements). Dead unit toggle added (localStorage `wh40k-dead-units`): dims unit row, pushes to bottom of list; alive/total pts summary shown in ArmyPanel header.
 
 **Touch event audit completed 23/03/2026** — full codebase sweep; all `onClick` violations on buttons and tappable elements converted to `onPointerDown` + `e.preventDefault()`. Subsequently updated (scroll-swipe fix): card thumbnails and ability/keyword chips now use the split pattern (`onPointerDown` captures rect, `onClick` opens popup); their backdrop dismissals use `onClick` to match. This applies to: `AbilityPopup` backdrop (`UnitAccordion.jsx`), primary mission lightbox backdrop (`ObjectivesSidebar.jsx`), twist lightbox backdrop (`ObjectivesSidebar.jsx`).
 
@@ -295,6 +302,7 @@ Pure transform function: `parseRosterJson(json)` → internal roster shape. No R
 - Unit rules: `selection.rules[]` (e.g. "Deadly Demise D3", "For The Greater Good"), deduped by name → `unit.unitRules[]`; distinct from the global `rules` keyword dict
 - Keywords: unit's own `categories`, names sorted alphabetically
 - Unit composition (see below)
+- Points: recursive sum of `costs` (name === "pts") across the unit selection and all descendant child selections → `unit.pts` (integer, default 0); includes enhancement upgrades
 
 **Multi-model unit fix:** units like Breacher Team have no Unit profile at the top level — it lives inside `type="model"` child selections. Parser falls back to `collectProfiles(sel, 'Unit')[0]` when not found at top level.
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { UnitAccordion } from './UnitAccordion';
 
@@ -24,6 +24,45 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
   const faction = armyData?.faction ?? null;
   const detachment = armyData?.detachment ?? storeDetachment ?? null;
   const rules = armyData?.rules ?? {};
+
+  // Dead units: { [rosterLabel]: Set<number> } — loaded from / saved to localStorage
+  const [deadUnits, setDeadUnits] = useState(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('wh40k-dead-units') ?? '{}');
+      const result = {};
+      for (const [k, v] of Object.entries(raw)) {
+        result[k] = new Set(Array.isArray(v) ? v : []);
+      }
+      return result;
+    } catch { return {}; }
+  });
+
+  useEffect(() => {
+    try {
+      // Merge-on-save: read current state so the other panel's data is preserved
+      const current = JSON.parse(localStorage.getItem('wh40k-dead-units') ?? '{}');
+      for (const [k, v] of Object.entries(deadUnits)) {
+        current[k] = [...v];
+      }
+      localStorage.setItem('wh40k-dead-units', JSON.stringify(current));
+    } catch {}
+  }, [deadUnits]);
+
+  const rosterLabel = armyData?.label ?? null;
+  const deadSet = rosterLabel ? (deadUnits[rosterLabel] ?? new Set()) : new Set();
+
+  function handleToggleDead(unitIdx) {
+    if (!rosterLabel) return;
+    setDeadUnits(prev => {
+      const prevSet = new Set(prev[rosterLabel] ?? []);
+      if (prevSet.has(unitIdx)) {
+        prevSet.delete(unitIdx);
+      } else {
+        prevSet.add(unitIdx);
+      }
+      return { ...prev, [rosterLabel]: prevSet };
+    });
+  }
 
   // Clear this player's attachments when their roster label changes (skip first render)
   const initializedRef = useRef(false);
@@ -53,6 +92,17 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
   const playerAttachments = (attachments && attachments[pKey]) ? attachments[pKey] : {};
   const attachedBodyguardIndices = new Set(Object.values(playerAttachments).map(Number));
 
+  // Points summary
+  const grandTotal = units.reduce((sum, u) => sum + (u.pts ?? 0), 0);
+  const aliveTotal = units.reduce((sum, u, i) => {
+    const bodyguardIdxStr = playerAttachments[String(i)];
+    const effectiveIdx = ((u.isCharacter ?? false) && bodyguardIdxStr !== undefined)
+      ? Number(bodyguardIdxStr)
+      : i;
+    return deadSet.has(effectiveIdx) ? sum : sum + (u.pts ?? 0);
+  }, 0);
+  const showPts = grandTotal > 0;
+
   function handleAttach(charIdx, bodyguardIdx) {
     setAttachments(prev => ({
       ...prev,
@@ -68,8 +118,8 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
     });
   }
 
-  // Build visible items
-  const visibleItems = [];
+  // Build visible items with sort metadata (alive first, dead last)
+  const itemsWithMeta = [];
   units.forEach((unit, i) => {
     // Bodyguards that are attached to a leader are rendered inside the merged accordion
     if (attachedBodyguardIndices.has(i)) return;
@@ -83,15 +133,22 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
       const bodyguardIdx = Number(bodyguardIdxStr);
       const bodyguardUnit = units[bodyguardIdx];
       if (!bodyguardUnit) return; // stale attachment — skip
-      visibleItems.push(
-        <UnitAccordion
-          key={i}
-          unit={bodyguardUnit}
-          displayName={displayNames[bodyguardIdx]}
-          leader={{ unit, displayName: displayNames[i], onDetach: () => handleDetach(i) }}
-          rules={rules}
-        />
-      );
+      const isDead = deadSet.has(bodyguardIdx);
+      itemsWithMeta.push({
+        primaryIdx: bodyguardIdx,
+        isDead,
+        element: (
+          <UnitAccordion
+            key={i}
+            unit={bodyguardUnit}
+            displayName={displayNames[bodyguardIdx]}
+            leader={{ unit, displayName: displayNames[i], onDetach: () => handleDetach(i) }}
+            rules={rules}
+            isDead={isDead}
+            onToggleDead={() => handleToggleDead(bodyguardIdx)}
+          />
+        ),
+      });
     } else {
       // Compute valid bodyguards for the Attach dropdown
       let validBodyguards;
@@ -108,19 +165,33 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
           });
       }
 
-      visibleItems.push(
-        <UnitAccordion
-          key={i}
-          unit={unit}
-          displayName={displayNames[i]}
-          isCharacter={unit.isCharacter ?? false}
-          validBodyguards={validBodyguards}
-          onAttach={(bgIdx) => handleAttach(i, bgIdx)}
-          rules={rules}
-        />
-      );
+      const isDead = deadSet.has(i);
+      itemsWithMeta.push({
+        primaryIdx: i,
+        isDead,
+        element: (
+          <UnitAccordion
+            key={i}
+            unit={unit}
+            displayName={displayNames[i]}
+            isCharacter={unit.isCharacter ?? false}
+            validBodyguards={validBodyguards}
+            onAttach={(bgIdx) => handleAttach(i, bgIdx)}
+            rules={rules}
+            isDead={isDead}
+            onToggleDead={() => handleToggleDead(i)}
+          />
+        ),
+      });
     }
   });
+
+  itemsWithMeta.sort((a, b) => {
+    if (a.isDead === b.isDead) return a.primaryIdx - b.primaryIdx;
+    return a.isDead ? 1 : -1;
+  });
+
+  const visibleItems = itemsWithMeta.map(item => item.element);
 
   return (
     <div className={`flex-1 flex flex-col overflow-hidden bg-surface-base ${divider}`}>
@@ -128,6 +199,9 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
       <div className="px-4 py-3 border-b border-border-subtle bg-surface-panel shrink-0">
         <div className="flex items-center gap-3">
           <div className={`font-display text-base font-bold shrink-0 ${accentClass}`}>{label}</div>
+          {showPts && (
+            <span className="text-sm text-text-secondary">{aliveTotal}/{grandTotal} pts</span>
+          )}
           {importButton}
         </div>
         {(faction || detachment) && (
