@@ -47,12 +47,9 @@ No server, no login, no app store. Runs entirely in the browser, works offline.
 src/
   components/
     layout/        # App shell, header, tab navigation
-    cp/            # Command Point tracker
-    vp/            # Victory Point tracker + scoring breakdown
+    tracker/       # TrackerTab.jsx — CP/VP controls, objectives, phase reminders
     objectives/    # Objective map
     phases/        # Turn phase checklist
-    timer/         # Round timer (lives in header)
-    factions/      # Faction/detachment reminder panels
     army/          # Army list tab (ArmyTab.jsx, ArmyPanel.jsx, UnitAccordion.jsx)
   store/
     gameStore.js   # Zustand store — single source of truth
@@ -97,11 +94,6 @@ Each round has two Player Turns (Player 1 then Player 2), each with 5 phases:
 - 5 objectives on a symmetrical grid
 - Each cycles: Unclaimed → Player 1 → Player 2 → Unclaimed
 
-### Challenger Cards
-- Triggers when a player is 6+ VP behind at battle round start
-- Player draws one card, chooses either the Stratagem (free) or Mission — not both
-- Card discarded at end of turn; max 12VP from Challenger cards total
-
 ---
 
 ## UI & UX Requirements
@@ -110,7 +102,7 @@ Each round has two Player Turns (Player 1 then Player 2), each with 5 phases:
 - **Touch first**: all interactive elements minimum 48×48px tap targets
 - **No horizontal scrolling** — everything fits within the viewport
 - **High contrast**: readable at arm's length
-- **Theme**: "Tactical Readout" — off-white/paper base, cold blue accent, Barlow Condensed + DM Sans; tokens in `tailwind.config.js`
+- **Theme**: "Tactical Readout" — dark charcoal base (`#131210`), off-white text (`#F0EDE8`), cold blue accent, Barlow Condensed + DM Sans; tokens in `tailwind.config.js`
 - **Accent colours are role-based**: Attacker = red, Defender = green
 - No decorative Warhammer imagery — keep it functional
 - Tab-based layout: Tracker · Phases · Factions · Army, one tap from anywhere
@@ -191,7 +183,7 @@ Read this section before touching any of these areas.
 
 ### Phase Reminders
 
-- **Reminders lookup**: keys are `faction||detachment` exact strings from `factions.js`; no string normalisation
+- **Reminders lookup**: `reminders.js` uses a hierarchical object — faction name as top-level key, detachment as nested key. `ArmyPanel.jsx` contains a `normalizeName` helper (lowercase + strip whitespace) used for leader/bodyguard fuzzy matching — this does **not** apply to phase reminder lookups, which use exact string keys.
 - **`reminders.js`** structure: `general_reminders`, `faction_reminders`, `detachment_reminders`; `PhaseReminders` colocated in `TrackerTab.jsx`
 
 ### Roster Import
@@ -215,7 +207,7 @@ Read this section before touching any of these areas.
 **Expanded** — stats row, then:
 - Ranged weapons table (omitted if none): A · BS · S · AP · D · Keywords
 - Melee weapons table (omitted if none): A · WS · S · AP · D · Keywords
-- Abilities / Rules section: merged `unit.abilities` + `unit.unitRules`; rule entries flagged `_isRule: true` render with teal chip; `AbilityPopup` handles all
+- Abilities / Rules section: merged `unit.abilities` + `unit.unitRules`; chip colours by flag priority: `_isEnhancement` → fuchsia-500; `_isLeader && _isRule` → orange-500; `_isLeader` → amber-400; `_isRule` → teal-500; plain ability → muted border; `AbilityPopup` handles all
 - Composition accordion (collapsed by default): model breakdown with equipment
 
 **Dead units:**
@@ -234,18 +226,18 @@ Three card states, all rendered as `fixed` overlays above all panels:
 - `fixed inset-0 z-50` scrim + `fixed z-[60]` centred card (max-w 480px, max-h 85vh, scrollable)
 - Enlarged stat block (all 6 stats); all stats neutral styling — no highlights
 - Footer: "Mark as Destroyed", "⚔ Set as Attacker", "🛡 Set as Defender"
-- Close button: `onPointerDown` + `preventDefault`; scrim and designation buttons: `onClick`
+- Close button: `onClick`; scrim and designation buttons: `onClick`
 - Ability/keyword popups: `AbilityPopup` at `z-[70]`
 - `CompositionAccordion` exported from `UnitPopOut.jsx` for reuse in `CombatOverlay.jsx`
 
 **Attacker / Defender cards** (`CombatOverlay.jsx`):
 - Mounted in `ArmyTab` above both panels; reads `attackerUnit` / `defenderUnit` from Zustand
-- **Single card active**: no scrim; a minimised chip is rendered directly inside `ArmyPanel` (the source panel — the one whose unit was designated) as `absolute inset-0 z-20 flex items-center justify-center`; this centres it within that panel's bounds only, not the viewport; `chipData` prop (`{ displayName, role }`) passed from `ArmyTab` to the source panel; the target panel shows its `pendingRole` prompt bar as before
+- **Single card active**: `CombatOverlay` renders `fixed inset-0 z-50 bg-black/75 backdrop-blur-sm` (same scrim as other overlays); both source and target panels are elevated to `z-[60]` via `(elevated || chipData)` on the panel root; source panel has an inner `absolute inset-0 bg-black/75 backdrop-blur-sm z-10` overlay to visually match the scrim (panel content behind the chip appears covered); chip sits at `z-20` above the inner overlay; target panel has no inner overlay — fully visible and tappable; `chipData` prop (`{ displayName, role }`) passed from `ArmyTab` to the source panel; target panel shows its `pendingRole` prompt bar
 - **Both cards active**: `z-50` scrim (`onClick → clearCombatUnits()`); cards in `fixed inset-0 z-[60] flex py-12 px-3 gap-3 pointer-events-none` container; each card wrapper `w-1/2 pointer-events-auto`; `attackerIsLeft` determined by comparing `attackerUnit.rosterLabel` with `attackerRosterLabel`
 - Attacker card: red left border; full content — neutral stat row (all 6), ranged + melee weapon tables, Abilities/Rules section, Composition accordion
 - Defender card: green left border; giant T + Sv + W boxes (`text-5xl`, in that order); M/Ld/OC smaller below in `grid-cols-3`; attached leader secondary stats row in amber (`— [Leader Name]` + compact M/T/Sv/W/Ld/OC); abilities section
 - Cards use `max-h-[calc(100vh-6rem)]` (matches `py-12` container padding)
-- Each card's × button: `onPointerDown` + `preventDefault`; clears only that designation
+- Each card's × button: `onClick`; clears only that designation (layout shift on close → `onClick` prevents tap-through)
 
 **Zustand state** (`gameStore.js`):
 - `attackerUnit` / `defenderUnit`: `{ rosterLabel, unitIndex, leaderUnitIndex, displayName, leaderDisplayName } | null`
@@ -315,6 +307,9 @@ Pure transform: `parseRosterJson(json)` → `{ label, faction, detachment, units
 | v1.8.5 | Unit card pop-outs — scrim-backed fixed overlay; Browse / Attacker / Defender states; enlarged stat block; side-by-side combat cards; persist across refresh | ✅ Done |
 | v1.8.5.1 | Combat overlay bug fixes — attacker full content; browse stat neutral; defender T+W+Sv; leader stats row; no scrim on single card; half-screen positioning | ✅ Done |
 | v1.8.5.2 | Pending chip repositioned — rendered inside source ArmyPanel as absolute overlay, centred within panel bounds only; scrim removed from single-chip state | ✅ Done |
+| v1.8.5.3 | Full scrim on single-card state — global z-50 scrim covers all; target panel elevated z-[60] (clear); source panel elevated z-[60] with inner bg-black/75 overlay to appear covered; chip at z-20 above overlay | ✅ Done |
+| v1.8.5.4 | Combat overlay ✕ close buttons switched from `onPointerDown` to `onClick` — prevents tap-through to elements beneath after card closes | ✅ Done |
+| v1.8.5.5 | Browse card ✕ and pending chip ✕ switched to `onClick`; single-card scrim gains `onClick={clearCombatUnits}` — completes tap-through fix across all pop-out states | ✅ Done |
 
 **Cross-cutting features shipped:** undo (20-snapshot stack), action log, mission card images + lightbox, localStorage persistence, secondary card draw/discard/lightbox.
 
@@ -322,9 +317,9 @@ Pure transform: `parseRosterJson(json)` → `{ label, faction, detachment, units
 
 ## Current Progress
 
-**Last updated:** 25/04/2026
+**Last updated:** 26/04/2026
 
-**Status:** v1.8.5.2 complete. Pending chip (single-card state) repositioned: chip now renders as `absolute inset-0 z-20` inside the source `ArmyPanel`, centred within that panel's bounds only. Removed the full-viewport `fixed` chip band and associated scrim from `CombatOverlay`. The other panel remains fully visible and tappable. `chipData` prop (`{ displayName, role }`) flows from `ArmyTab` to the source panel; target panel continues to show its `pendingRole` prompt bar. Planning v1.9 (rules panel, setup rework).
+**Status:** v1.8.5.5 complete. All ✕ buttons across the unit pop-out system now use `onClick` (browse card in `UnitPopOut.jsx`, pending chip in `ArmyPanel.jsx`). Single-card state scrim in `CombatOverlay.jsx` now calls `clearCombatUnits` on tap. No remaining `onPointerDown` close handlers in the pop-out system. Planning v1.9 (rules panel, setup rework).
 
 ---
 
@@ -356,6 +351,6 @@ Full stratagems integration from Wahapedia CSV data. Requires:
 - Custom ability editing
 - Match history export
 - Asymmetric War mode
-- Challenger card tracker
+- Challenger card tracker (rules documented but no trigger logic, draw logic, or scoring exists in the codebase yet)
 - Wound roll matrix (S vs T pre-computed)
 - Filtering units by phase (show only melee weapons in Fight Phase)

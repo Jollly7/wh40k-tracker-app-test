@@ -133,8 +133,10 @@ export function AbilitiesSection({ abilities, unitRules, leaderAbilities, leader
             key={i}
             onClick={(e) => { e.stopPropagation(); onAbilityClick(ability); }}
             className={`text-[10px] rounded px-1 py-0.5 transition-colors ${
-              ability._isLeader && ability._isRule
-                ? 'border border-amber-400/60 text-amber-300/80 hover:bg-amber-400/10'
+              ability._isEnhancement
+                ? 'border border-fuchsia-500 text-fuchsia-400 hover:bg-fuchsia-500/10'
+                : ability._isLeader && ability._isRule
+                ? 'border border-orange-500 text-orange-400 hover:bg-orange-500/10'
                 : ability._isLeader
                 ? 'border border-amber-400 text-amber-400 hover:bg-amber-400/10'
                 : ability._isRule
@@ -263,7 +265,7 @@ export function UnitPopOut({ unit, displayName, leader, rules, roleAccent, isDea
                 )}
               </div>
               <button
-                onPointerDown={(e) => { e.preventDefault(); onClose(); }}
+                onClick={onClose}
                 className="shrink-0 text-text-muted hover:text-text-primary min-w-[48px] min-h-[48px] flex items-center justify-center text-lg"
                 aria-label="Close"
               >

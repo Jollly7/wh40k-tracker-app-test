@@ -303,6 +303,7 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
       )}
 
       {/* Pending chip — floats centred within this panel when a unit from here is designated but the other hasn't been picked yet */}
+      {chipData && <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-10" />}
       {chipData && (
         <div className="absolute inset-0 z-20 flex items-center justify-center">
           <div className={`bg-surface-panel rounded-xl border border-l-4 ${chipData.role === 'attacker' ? 'border-danger' : 'border-success'} shadow-xl px-4 py-3 max-w-[220px] w-full mx-4`}>
@@ -311,7 +312,7 @@ export function ArmyPanel({ armyData, accentClass, label, isLeft, importButton, 
                 {chipData.role === 'attacker' ? '⚔' : '🛡'} {chipData.displayName}
               </div>
               <button
-                onPointerDown={(e) => { e.preventDefault(); chipData.role === 'attacker' ? setAttackerUnit(null) : setDefenderUnit(null); }}
+                onClick={() => { chipData.role === 'attacker' ? setAttackerUnit(null) : setDefenderUnit(null); }}
                 className="shrink-0 text-text-muted hover:text-text-primary min-w-[32px] min-h-[32px] flex items-center justify-center text-sm"
                 aria-label="Clear selection"
               >

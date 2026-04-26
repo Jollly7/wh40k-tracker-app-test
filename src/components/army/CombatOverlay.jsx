@@ -99,7 +99,7 @@ function AttackerCard({ data, onClose }) {
             <div className="text-[10px] text-text-muted uppercase tracking-widest mt-0.5">⚔ Attacker</div>
           </div>
           <button
-            onPointerDown={(e) => { e.preventDefault(); onClose(); }}
+            onClick={onClose}
             className="shrink-0 text-text-muted hover:text-text-primary min-w-[48px] min-h-[48px] flex items-center justify-center text-lg"
             aria-label="Close attacker card"
           >
@@ -172,7 +172,7 @@ function DefenderCard({ data, onClose }) {
             <div className="text-[10px] text-text-muted uppercase tracking-widest mt-0.5">🛡 Defender</div>
           </div>
           <button
-            onPointerDown={(e) => { e.preventDefault(); onClose(); }}
+            onClick={onClose}
             className="shrink-0 text-text-muted hover:text-text-primary min-w-[48px] min-h-[48px] flex items-center justify-center text-lg"
             aria-label="Close defender card"
           >
@@ -235,7 +235,7 @@ export function CombatOverlay({ rosters, attackerRosterLabel }) {
   const attackerIsLeft = attackerUnit?.rosterLabel === attackerRosterLabel;
 
   if (!bothActive) {
-    return <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm" />;
+    return <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm" onClick={clearCombatUnits} />;
   }
 
   return (

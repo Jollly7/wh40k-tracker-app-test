@@ -101,6 +101,23 @@ function collectProfiles(selection, typeName) {
 }
 
 /**
+ * Collect all Abilities profiles from a selection tree, tagging each with
+ * `isEnhancement: true` when the profile lives inside an Enhancement selection.
+ * Detection: child selection has a `group` field starting with "Enhancements".
+ */
+function collectAbilityProfilesWithFlags(selection, parentIsEnhancement = false) {
+  const results = [];
+  const isEnhancement = parentIsEnhancement || (typeof selection.group === 'string' && selection.group.startsWith('Enhancements'));
+  for (const p of getProfiles(selection)) {
+    if (p.typeName === 'Abilities') results.push({ profile: p, isEnhancement });
+  }
+  for (const child of getSelections(selection)) {
+    results.push(...collectAbilityProfilesWithFlags(child, isEnhancement));
+  }
+  return results;
+}
+
+/**
  * Recursively collect weapons of a given typeName from nested selections.
  * Returns a Map<name, weaponEntry> — de-duplicated by name.
  */
@@ -218,8 +235,8 @@ function parseUnit(sel) {
   };
 
   // Invuln save: Abilities profile whose name matches /^\d+\+\+$/
-  const allAbilityProfiles = collectProfiles(sel, 'Abilities');
-  for (const ap of allAbilityProfiles) {
+  const allAbilityEntries = collectAbilityProfilesWithFlags(sel);
+  for (const { profile: ap } of allAbilityEntries) {
     if (/^\d+\+\+$/.test((ap.name ?? '').trim())) {
       stats.invuln = ap.name.trim();
       break;
@@ -233,13 +250,15 @@ function parseUnit(sel) {
   // Abilities (deduped, excluding invuln saves)
   const seen = new Set();
   const abilities = [];
-  for (const ap of allAbilityProfiles) {
+  for (const { profile: ap, isEnhancement } of allAbilityEntries) {
     const n = (ap.name ?? '').trim();
     if (/^\d+\+\+$/.test(n)) continue;
     if (seen.has(n)) continue;
     seen.add(n);
     const desc = getChar(ap.characteristics, 'Description') ?? '';
-    abilities.push({ name: n, description: desc });
+    const entry = { name: n, description: desc };
+    if (isEnhancement) entry._isEnhancement = true;
+    abilities.push(entry);
   }
 
   // Unit-level rules from selection.rules[] (e.g. "Deadly Demise D3", "For The Greater Good")
